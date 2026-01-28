@@ -89,6 +89,7 @@ class RLHFDataset(Dataset):
         config: DictConfig,
         processor: Optional[ProcessorMixin] = None,
     ):
+        print("Initializing RLHFDataset...")
         if not isinstance(data_files, list | ListConfig):
             data_files = [data_files]
 
@@ -141,6 +142,7 @@ class RLHFDataset(Dataset):
 
     def maybe_filter_out_long_prompts(self, dataframe: datasets.Dataset = None):
         # filter out too long prompts
+        print("Filtering overlong prompts...")
         if self.filter_overlong_prompts:
             tokenizer = self.tokenizer
             processor = self.processor
@@ -156,8 +158,21 @@ class RLHFDataset(Dataset):
                     raw_prompt = self.processor.apply_chat_template(
                         messages, add_generation_prompt=True, tokenize=False
                     )
-                    images = [process_image(image) for image in doc[image_key]] if image_key in doc else None
-                    videos = [process_video(video) for video in doc[video_key]] if video_key in doc else None
+
+                    
+                    image_values = doc.get(image_key, None)
+                    images = (
+                        [process_image(image) for image in image_values]
+                        if image_values
+                        else None
+                    )
+
+                    video_values = doc.get(video_key, None)
+                    videos = (
+                        [process_video(video) for video in video_values]
+                        if video_values
+                        else None
+                    )
 
                     return len(processor(text=[raw_prompt], images=images, videos=videos)["input_ids"][0])
 

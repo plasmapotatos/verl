@@ -101,9 +101,13 @@ def default_compute_score(
         from . import search_r1_like_qa_em
 
         res = search_r1_like_qa_em.compute_score(solution_str, ground_truth)
+    elif data_source.endswith("_hard_negative_pairing"):
+        from . import hard_negative_pairing
+
+        res = hard_negative_pairing.compute_score(solution_str, ground_truth)
 
     else:
-        raise NotImplementedError(f"Reward function is not implemented for {data_source=}")
+        raise NotImplementedError(f"Reward function is not implemented for {data_source}.")
 
     if isinstance(res, dict):
         return res
