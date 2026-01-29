@@ -34,13 +34,11 @@ def _resolve_image_path(image_path: str | None, vlm_eval_dir: str | None) -> str
     return os.path.abspath(os.path.join(vlm_eval_dir, image_path))
 
 
-def _build_prompt(question: str, choices: list[Any], choice_1: Any, choice_2: Any, image_tag: str) -> str:
-    choices_text = "\n".join([f"{chr(65 + i)}. {choice}" for i, choice in enumerate(choices or [])])
+def _build_prompt(question: str, choice_1: Any, choice_2: Any, image_tag: str) -> str:
     prompt = (
         image_tag
         + "Question: "
         + question
-        + ("\nChoices:\n" + choices_text if choices_text else "")
         + "\nChoice 1: "
         + str(choice_1)
         + "\nChoice 2: "
@@ -115,9 +113,8 @@ def main(dataset: str | None = None) -> None:
 
     def make_map_fn(split: str):
         def process_fn(example, idx):
-            question = example.get("question", "").strip()
+            question = example.get("prompt", "").strip()
             metadata = example.get("metadata", {})
-            choices = metadata.get("choices") or []
 
             correct = example.get("correct", {})
             negative = example.get("negative", {})
@@ -144,7 +141,7 @@ def main(dataset: str | None = None) -> None:
                 images = [Image.open(image_path).convert("RGB")]
             image_tag = "<image>\n" if image_path else ""
 
-            prompt = _build_prompt(question, choices, choice_1, choice_2, image_tag)
+            prompt = _build_prompt(question, choice_1, choice_2, image_tag)
 
             data = {
                 "data_source": data_source,
