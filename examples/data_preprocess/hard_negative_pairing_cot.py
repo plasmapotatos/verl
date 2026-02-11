@@ -1,5 +1,5 @@
 """
-Preprocess hard-negative pairing json to parquet format for ScienceQA/SimpleQA.
+Preprocess hard-negative pairing json to parquet format for ScienceQA/SimpleQA (CoT variant).
 """
 
 from __future__ import annotations
@@ -34,6 +34,14 @@ def _resolve_image_path(image_path: str | None, vlm_eval_dir: str | None) -> str
     return os.path.abspath(os.path.join(vlm_eval_dir, image_path))
 
 
+_instruction_following = (
+    r"You FIRST think about the reasoning process as an internal monologue and then provide the final answer. "
+    r"The reasoning process MUST BE enclosed within <think> </think> tags. "
+    r"The final answer MUST BE put in \\boxed{}."
+)
+
+
+# it is up to the question to include the image placeholder!
 def _build_prompt(question: str, choice_1: Any, choice_2: Any) -> str:
     prompt = (
         "You are judging two candidate answers to the following question.\n\n"
@@ -44,7 +52,8 @@ def _build_prompt(question: str, choice_1: Any, choice_2: Any) -> str:
         f"{choice_2}\n\n"
         "Which choice better answers the question?\n"
         "Consider correctness, relevance, and completeness.\n\n"
-        "Only output \"1\" or \"2\". Do not output anything else."
+        "Only output \"1\" or \"2\" as the final answer.\n"
+        f"{_instruction_following}"
     )
     return prompt
 
@@ -71,29 +80,34 @@ def main(dataset: str | None = None) -> None:
         "--max_pairs",
         type=int,
         default=None,
-        help="Maximum number of pairs to process (SimpleQA only).",
+        help="Maximum number of pairs to process.",
     )
     parser.add_argument(
         "--vlm_eval_dir",
         default="/work/hdd/bbsg/twei2/vlm-eval",
         help="Base directory for resolving metadata.image_path (relative to vlm_eval).",
     )
+    parser.add_argument(
+        "--sample_ids_path",
+        default=None,
+        help="Optional path to JSON list of sample_ids to keep.",
+    )
 
     args = parser.parse_args()
 
-    data_source = f"{args.dataset}_hard_negative_pairing"
+    data_source = f"{args.dataset}_hard_negative_pairing_cot"
     ability = "science" if args.dataset == "scienceqa" else "general"
 
     if args.local_dataset_path is None:
         args.local_dataset_path = _SCIENCEQA_DEFAULT_PATH if args.dataset == "scienceqa" else _SIMPLEQA_DEFAULT_PATH
     if args.local_dir is None:
-        args.local_dir = f"./data/{args.dataset}_hard_negative_pairing"
+        args.local_dir = f"./data/{args.dataset}_hard_negative_pairing_cot"
 
     with open(os.path.expanduser(args.local_dataset_path), "r", encoding="utf-8") as f:
         raw = json.load(f)
 
     pairs = raw.get("pairs", [])
-    if args.max_pairs is not None and args.dataset == "simpleqa":
+    if args.max_pairs is not None:
         pairs = pairs[: args.max_pairs]
 
     dataset_obj = datasets.Dataset.from_list(pairs)
@@ -107,17 +121,24 @@ def main(dataset: str | None = None) -> None:
     test_dataset = dataset_dict["test"]
     print(f"Test dataset size: {len(test_dataset)}")
 
+    sample_id_set = None
+    if args.sample_ids_path:
+        with open(os.path.expanduser(args.sample_ids_path), "r", encoding="utf-8") as f:
+            sample_id_set = set(json.load(f))
+
     if args.dataset == "scienceqa":
-        def _has_valid_pair(example) -> bool: # Check if response exists
+        def _has_valid_pair(example) -> bool:
             has_image = bool((example.get("metadata", {}) or {}).get("image_path"))
             correct_response = (example.get("correct", {}) or {}).get("model_response")
             negative_response = (example.get("negative", {}) or {}).get("model_response")
             has_responses = bool(correct_response) and bool(negative_response)
-            return has_image and has_responses
+            if sample_id_set is None:
+                return has_image and has_responses
+            return has_image and has_responses and example.get("sample_id") in sample_id_set
 
         train_dataset = train_dataset.filter(_has_valid_pair)
         test_dataset = test_dataset.filter(_has_valid_pair)
-        
+
         print(f"After filtering, train dataset size: {len(train_dataset)}")
         print(f"After filtering, test dataset size: {len(test_dataset)}")
 

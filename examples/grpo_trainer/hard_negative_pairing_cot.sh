@@ -3,8 +3,8 @@ ENGINE=${1:-vllm}
 
 python3 -m verl.trainer.main_ppo \
     algorithm.adv_estimator=grpo \
-    data.train_files=./data/scienceqa_hard_negative_pairing/train.parquet \
-    data.val_files=./data/scienceqa_hard_negative_pairing/test.parquet \
+    data.train_files=./data/scienceqa_hard_negative_pairing_direct_cot/train.parquet \
+    data.val_files=./data/scienceqa_hard_negative_pairing_direct_cot/test.parquet \
     data.train_batch_size=12 \
     data.max_prompt_length=2048 \
     data.max_response_length=128 \
@@ -37,8 +37,8 @@ python3 -m verl.trainer.main_ppo \
     algorithm.use_kl_in_reward=False \
     trainer.critic_warmup=0 \
     trainer.logger='["console","wandb"]' \
-    trainer.project_name='verl_grpo_example_scienceqa_hard_negative_pairing' \
-    trainer.experiment_name='qwen2_5_vl_3b_scienceqa_hard_negative_pairing_cot' \
+    trainer.project_name='verl_grpo_example_scienceqa_hard_negative_pairing_direct_cot' \
+    trainer.experiment_name='qwen2_5_vl_3b_grpo_scienceqa_hard_negative_pairing_direct_cot_strict_format_reward' \
     trainer.n_gpus_per_node=2 \
     trainer.nnodes=1 \
     trainer.save_freq=40 \

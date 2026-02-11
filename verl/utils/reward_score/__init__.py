@@ -89,6 +89,10 @@ def default_compute_score(
         from . import geo3k
 
         res = geo3k.compute_score(solution_str, ground_truth)
+    elif data_source in ["scienceqa"]:
+        from . import scienceqa
+
+        res = scienceqa.compute_score(solution_str, ground_truth)
     elif data_source in [
         "searchR1_nq",
         "searchR1_triviaqa",
@@ -101,6 +105,10 @@ def default_compute_score(
         from . import search_r1_like_qa_em
 
         res = search_r1_like_qa_em.compute_score(solution_str, ground_truth)
+    elif data_source.endswith("_hard_negative_pairing_cot"):
+        from . import hard_negative_pairing_cot
+
+        res = hard_negative_pairing_cot.compute_score(solution_str, ground_truth)
     elif data_source.endswith("_hard_negative_pairing"):
         from . import hard_negative_pairing
 

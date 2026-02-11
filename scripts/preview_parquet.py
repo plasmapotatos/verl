@@ -30,8 +30,8 @@ def main():
     parser.add_argument("parquet_path", help="Path to a parquet file (train.parquet or test.parquet).")
     parser.add_argument(
         "--save-path",
-        default="preview_parquest.json",
-        help="Path to save preview rows as JSON. Default: preview_parquest.json.",
+        default="preview_parquet.json",
+        help="Path to save preview rows as JSON. Default: preview_parquet.json.",
     )
     parser.add_argument("--num", type=int, default=5, help="Number of records to print.")
     parser.add_argument(
@@ -44,7 +44,8 @@ def main():
     parquet_path = os.path.expanduser(args.parquet_path)
     dataset = datasets.load_dataset("parquet", data_files=parquet_path)["train"]
 
-    n = min(args.num, len(dataset))
+    dataset_length = len(dataset)
+    n = min(args.num, dataset_length)
     preview_rows = []
     for i in range(n):
         row = _to_jsonable(dataset[i])
@@ -54,7 +55,12 @@ def main():
 
     save_path = os.path.expanduser(args.save_path)
     with open(save_path, "w", encoding="utf-8") as f:
-        json.dump(preview_rows, f, ensure_ascii=False, indent=2)
+        json.dump(
+            {"dataset_length": dataset_length, "rows": preview_rows},
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
     if args.check_images:
         empty_count = 0
