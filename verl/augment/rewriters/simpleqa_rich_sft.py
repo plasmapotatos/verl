@@ -1,4 +1,4 @@
-"""Rewrite SimpleQA samples using web-sourced passages."""
+"""Rewrite SimpleQA samples by generating richer Q/A from web passages."""
 
 from __future__ import annotations
 
@@ -11,15 +11,15 @@ from ..schemas import attach_augmentation_metadata, get_prompt_text
 from .simpleqa_web_utils import extract_urls, parse_json_payload, pick_source_text
 
 
-@register("simpleqa_web_search")
-class SimpleqaWebSearchRewriter:
-    name = "simpleqa_web_search"
+@register("simpleqa_rich_sft")
+class SimpleqaRichSftRewriter:
+    name = "simpleqa_rich_sft"
 
     def __init__(
         self,
         *,
         model: str = "gpt-4o-mini",
-        max_chars: int = 12000,
+        max_chars: int = 6000,
         timeout: int = 30,
         log_path: str | None = None,
         max_log_samples: int = 0,
@@ -36,7 +36,7 @@ class SimpleqaWebSearchRewriter:
             "skipped_no_content": 0,
             "skipped_missing_answer": 0,
             "skipped_no_window": 0,
-            "skipped_window_insufficient": 0,
+            "skipped_rich_failed": 0,
             "success": 0,
         }
         if self._log_path:
@@ -104,38 +104,112 @@ class SimpleqaWebSearchRewriter:
         window = window.strip()
         return window or None
 
-    def _window_sufficient(self, *, window: str, question: str, answer: str, seed: int | None) -> bool:
+    def _generate_rich_qa(
+        self,
+        *,
+        passage: str,
+        question: str,
+        answer: str,
+        seed: int | None,
+    ) -> Optional[dict]:
         system_prompt = (
-            "You are a strict judge. Return JSON only with key 'sufficient' as true or false. "
-            "ONLY set sufficient=true only if the answer is stated exactly as a substring in the passage. "
-            "If the passage only implies the answer without stating it, sufficient must be false."
+            "You generate richer Q/A pairs grounded in the passage. "
+            "Return JSON only with keys 'rich_question' and 'rich_answer'."
         )
         user_prompt = (
-            "Given the passage, decide if the answer can be fully supported by it.\n\n"
-            "### EXAMPLE ###\n\n"
-            "Example (sufficient=false):\n"
-            "Passage excerpt: '... appointed Chief Justice of India by the Indira Gandhi government.'\n"
-            "Question: Who appointed the Chief Justice of India, Mirza Hameedullah Beg, in 1977?\n"
-            "Answer: Fakhruddin Ali Ahmed\n\n"
-            "### END EXAMPLE ###\n\n"
-            f"Question: {question}\n"
-            f"Answer: {answer}\n\n"
-            "Passage:\n"
-            f"{window}"
+            "Given a passage and an original question/answer, produce a richer question and answer that are fully "
+            "answerable from the passage. The rich question should ask for more detail or a broader slice of facts "
+            "that includes the original answer. The rich answer should be concise and directly supported by the passage.\n\n"
+            "### EXAMPLE 1 ###\n"
+            "[Wikipedia Passage]\n"
+            "The IEEE Frank Rosenblatt Award is a Technical Field Award established by the Institute of Electrical and Electronics Engineers Board of Directors in 2004. This award is presented for outstanding contributions to the advancement of the design, practice, techniques, or theory in biologically and linguistically motivated computational paradigms and systems, including neural networks, connectionist systems, evolutionary computation, fuzzy systems, and hybrid intelligent systems in which these paradigms are contained.\n\n"
+            "The award may be presented to an individual, multiple recipients, or a team of up to three people. It is named for Frank Rosenblatt, creator of the perceptron.\n\n"
+            "Recipients of this award receive a bronze medal, certificate, and honorarium.\n\n"
+            "Recipients\n"
+            "- 2026: Andrew G. Barto & Richard S. Sutton\n"
+            "- 2025: Yaochu Jin\n"
+            "- 2024: Bernadette Bouchon-Meunier\n"
+            "- 2023: Marios Polycarpou\n"
+            "- 2022: Paul Werbos\n"
+            "- 2021: James M. Keller\n"
+            "- 2020: Xin Yao\n"
+            "- 2019: Erkki Oja\n"
+            "- 2018: Enrique H. Ruspini\n"
+            "- 2017: Stephen Grossberg\n"
+            "- 2016: Ronald R. Yager\n"
+            "- 2015: Marco Dorigo\n"
+            "- 2014: Geoffrey E. Hinton\n"
+            "- 2013: Terrence Sejnowski\n"
+            "- 2012: Vladimir Vapnik\n"
+            "- 2011: Hans-Paul Schwefel\n"
+            "- 2010: Michio Sugeno\n"
+            "- 2009: John J. Hopfield\n"
+            "- 2008: Teuvo Kohonen\n"
+            "- 2007: James C. Bezdek\n"
+            "- 2006: Lawrence J. Fogel\n\n"
+            "[Original Question]\n"
+            "Who received the IEEE Frank Rosenblatt Award in 2010?\n\n"
+            "[Original Answer]\n"
+            "Michio Sugeno\n\n"
+            "[Rich Question]\n"
+            "List all the IEEE Frank Rosenblatt Award recipients from 2010 to 2026.\n\n"
+            "[Rich Answer]\n"
+            "- 2026: Andrew G. Barto & Richard S. Sutton\n"
+            "- 2025: Yaochu Jin\n"
+            "- 2024: Bernadette Bouchon-Meunier\n"
+            "- 2023: Marios Polycarpou\n"
+            "- 2022: Paul Werbos\n"
+            "- 2021: James M. Keller\n"
+            "- 2020: Xin Yao\n"
+            "- 2019: Erkki Oja\n"
+            "- 2018: Enrique H. Ruspini\n"
+            "- 2017: Stephen Grossberg\n"
+            "- 2016: Ronald R. Yager\n"
+            "- 2015: Marco Dorigo\n"
+            "- 2014: Geoffrey E. Hinton\n"
+            "- 2013: Terrence Sejnowski\n"
+            "- 2012: Vladimir Vapnik\n"
+            "- 2011: Hans-Paul Schwefel\n"
+            "- 2010: Michio Sugeno\n\n"
+            "### EXAMPLE 2 ###\n"
+            "[Wikipedia Passage]\n"
+            "Mirza Hameedullah Beg (M. H. Beg) (22 February 1913 – 19 November 1988) was the 15th Chief Justice of India, serving from January 1977 to February 1978. Appointed by Fakhruddin Ali Ahmed.\n\n"
+            "[Original Question]\n"
+            "Who appointed the Chief Justice of India, Mirza Hameedullah Beg, in 1977?\n\n"
+            "[Original Answer]\n"
+            "Fakhruddin Ali Ahmed\n\n"
+            "[Rich Question]\n"
+            "Provide the full name, lifespan, position, and term of service of the individual who appointed Mirza Hameedullah Beg as Chief Justice of India in 1977.\n\n"
+            "[Rich Answer]\n"
+            "The individual who appointed Mirza Hameedullah Beg as Chief Justice of India in 1977 was Fakhruddin Ali Ahmed (13 May 1905 – 11 February 1977), who served as the 5th President of India from 1974 until his death in 1977.\n\n"
+            "### YOUR TASK ###\n"
+            "[Wikipedia Passage]\n"
+            f"{passage}\n\n"
+            "[Original Question]\n"
+            f"{question}\n\n"
+            "[Original Answer]\n"
+            f"{answer}\n\n"
+            "Return JSON with keys rich_question and rich_answer only."
         )
         raw = self._client.generate(
             system_prompt=system_prompt,
             user_prompt=user_prompt,
-            temperature=0.0,
+            temperature=0.2,
             seed=seed,
         )
-        self._log("[window_sufficient] system_prompt=" + self._truncate(system_prompt))
-        self._log("[window_sufficient] user_prompt=" + self._truncate(user_prompt))
-        self._log("[window_sufficient] raw_response=" + self._truncate(raw))
+        self._log("[rich_qa] system_prompt=" + self._truncate(system_prompt))
+        self._log("[rich_qa] user_prompt=" + self._truncate(user_prompt))
+        self._log("[rich_qa] raw_response=" + self._truncate(raw))
         payload = parse_json_payload(raw)
-        if not payload or "sufficient" not in payload:
-            return False
-        return bool(payload.get("sufficient"))
+        if not payload:
+            return None
+        rich_question = payload.get("rich_question")
+        rich_answer = payload.get("rich_answer")
+        if not isinstance(rich_question, str) or not rich_question.strip():
+            return None
+        if not isinstance(rich_answer, str) or not rich_answer.strip():
+            return None
+        return {"rich_question": rich_question.strip(), "rich_answer": rich_answer.strip()}
 
     def rewrite(self, sample: dict, *, rng_seed: int | None = None) -> List[dict]:
         self._inc("total_samples")
@@ -184,28 +258,34 @@ class SimpleqaWebSearchRewriter:
             return []
         self._log("[sample] window_preview=" + self._truncate(window))
 
-        if not self._window_sufficient(
-            window=window,
+        rich = self._generate_rich_qa(
+            passage=window,
             question=question.strip(),
             answer=answer.strip(),
             seed=rng_seed,
-        ):
-            self._log("[sample] window insufficient")
-            self._inc("skipped_window_insufficient")
+        )
+        if not rich:
+            self._log("[sample] rich qa generation failed")
+            self._inc("skipped_rich_failed")
             return []
-        self._log("[sample] window sufficient")
+
+        rich_question = rich["rich_question"]
+        rich_answer = rich["rich_answer"]
 
         updated = deepcopy(sample)
-        prompt_text = f"Write the following Wikipedia-style passage verbatim:\n\n{window}"
+        prompt_text = f"{rich_question}\n\nReference:\n{window}"
         if "prompt" in updated:
             updated["prompt"][0]["content"] = prompt_text
         if "question" in updated:
-            updated["question"] = "Write the following Wikipedia-style passage verbatim:"
+            updated["question"] = prompt_text
         if "answer" in updated:
-            updated["answer"] = window
+            updated["answer"] = rich_answer
+        extra_info = updated.get("extra_info")
+        if isinstance(extra_info, dict) and "question" in extra_info:
+            extra_info["question"] = prompt_text
         reward_model = updated.get("reward_model")
         if isinstance(reward_model, dict) and "ground_truth" in reward_model:
-            reward_model["ground_truth"] = window
+            reward_model["ground_truth"] = rich_answer
 
         updated = attach_augmentation_metadata(
             updated,

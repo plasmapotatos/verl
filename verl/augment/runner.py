@@ -41,6 +41,10 @@ def run(
 
     outputs: List[dict] = []
     per_method_outputs: Dict[str, List[dict]] = {m: [] for m in methods}
+    rewriters = {}
+    for method in methods:
+        rewriter_kwargs = {"mode": mode} if mode is not None else {}
+        rewriters[method] = get_rewriter(method, **rewriter_kwargs)
 
     for idx, sample in enumerate(tqdm(samples, desc="Augmenting samples")):
         sample_id = None
@@ -55,8 +59,7 @@ def run(
                 per_method_outputs[m].append(deepcopy(sample))
 
         for method in methods:
-            rewriter_kwargs = {"mode": mode} if mode is not None else {}
-            rewriter = get_rewriter(method, **rewriter_kwargs)
+            rewriter = rewriters[method]
             for variant_idx in range(n_variants_per_method):
                 derived_seed = _derive_seed(seed, str(sample_id), method, variant_idx)
                 augmented_samples = rewriter.rewrite(sample, rng_seed=derived_seed)
@@ -73,6 +76,20 @@ def run(
                     outputs.append(out)
                     per_method_outputs[method].append(out)
 
+    def _write_metrics(metrics: Dict[str, Dict[str, int]], path: str) -> None:
+        with open(path, "w", encoding="utf-8") as handle:
+            import json
+
+            json.dump(metrics, handle, ensure_ascii=False, indent=2)
+
+    metrics_by_method: Dict[str, Dict[str, int]] = {}
+    for method, rewriter in rewriters.items():
+        get_metrics = getattr(rewriter, "get_metrics", None)
+        if callable(get_metrics):
+            metrics = get_metrics()
+            if isinstance(metrics, dict):
+                metrics_by_method[method] = metrics
+
     if write_per_method:
         if output_dir is None:
             raise ValueError("output_dir is required when write_per_method is True")
@@ -80,7 +97,16 @@ def run(
         for method, items in per_method_outputs.items():
             path = os.path.join(output_dir, f"{method}.parquet")
             write_parquet(items, path)
+            if method in metrics_by_method:
+                metrics_path = os.path.join(output_dir, f"{method}_metrics.json")
+                _write_metrics({method: metrics_by_method[method]}, metrics_path)
     else:
         if output_path is None:
             raise ValueError("output_path is required when write_per_method is False")
         write_parquet(outputs, output_path)
+        if metrics_by_method:
+            if output_path.endswith(".parquet"):
+                metrics_path = output_path[: -len(".parquet")] + "_metrics.json"
+            else:
+                metrics_path = output_path + "_metrics.json"
+            _write_metrics(metrics_by_method, metrics_path)

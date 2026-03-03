@@ -21,12 +21,23 @@ export RAY_USAGE_STATS_ENABLED=0
 #   EXP_PREFIX     prefix for experiment_name (default: "sft")
 #   EPOCHS_LIST    space-separated epochs (default: "1 3 6 10 20")
 #   LR_LIST        space-separated learning rates (default: "1e-5 2e-5 3e-5 5e-5 7e-5 1e-4 1.5e-4 2e-4 3e-4 5e-4")
+#   CLM_MODE       set to 1 for text-only CLM training (default: 0)
+#   CLM_TEXT_KEY   text field name for CLM (default: "text")
+#   CLM_MAX_LEN    max sequence length for CLM (default: 4096)
+#   CLM_TRUNCATION truncation mode for CLM (default: "right")
 #   TRAIN_BATCH_SIZE (default: 64)
 #   SEED           (default: 1)
 #   NPROC          (default: 1)
 #   NGPU_GEN       (default: 1)
 #   TP_SIZE        (default: 1)
 #   TEMP           (default: 0)
+#   MAX_LENGTH     max sequence length (default: 1024)
+#   TRUNCATION     truncation mode: error|left|right (default: error)
+#   FILTER_OVERLONG_PROMPTS filter samples exceeding max_length (default: 0)
+#   PROMPT_KEY     top-level prompt field (default: "prompt")
+#   RESPONSE_KEY   top-level response field (default: "response")
+#   PROMPT_DICT_KEYS   dict path under prompt field (default: "question")
+#   RESPONSE_DICT_KEYS dict path under response field (default: "answer")
 #   PROMPT_LEN     (default: 2048)
 #   RESP_LEN       (default: 1024)
 #   GPU_MEM_UTIL   (default: 0.8)
@@ -50,6 +61,10 @@ EVAL_DATA="${EVAL_DATA:-}"
 EXP_PREFIX="${EXP_PREFIX:-sft}"
 EPOCHS_LIST="${EPOCHS_LIST:-1 3 6 10 20}"
 LR_LIST="${LR_LIST:-3e-5 5e-5 7e-5 1e-4 1.5e-4 2e-4}"
+CLM_MODE="${CLM_MODE:-0}"
+CLM_TEXT_KEY="${CLM_TEXT_KEY:-text}"
+CLM_MAX_LEN="${CLM_MAX_LEN:-4096}"
+CLM_TRUNCATION="${CLM_TRUNCATION:-right}"
 
 # Training launcher settings
 NPROC="${NPROC:-1}"
@@ -67,6 +82,17 @@ TEMP="${TEMP:-0}"
 PROMPT_LEN="${PROMPT_LEN:-2048}"
 RESP_LEN="${RESP_LEN:-1024}"
 GPU_MEM_UTIL="${GPU_MEM_UTIL:-0.8}"
+
+# Sequence settings
+MAX_LENGTH="${MAX_LENGTH:-1024}"
+TRUNCATION="${TRUNCATION:-error}"
+FILTER_OVERLONG_PROMPTS="${FILTER_OVERLONG_PROMPTS:-0}"
+
+# SFT field mapping (non-CLM)
+PROMPT_KEY="${PROMPT_KEY:-prompt}"
+RESPONSE_KEY="${RESPONSE_KEY:-response}"
+PROMPT_DICT_KEYS="${PROMPT_DICT_KEYS-}"
+RESPONSE_DICT_KEYS="${RESPONSE_DICT_KEYS-}"
 
 # HF aux files to copy into merged_hf_model (same as your inference script)
 HF_AUX_SRC_DIR="${HF_AUX_SRC_DIR:-$VERL_DIR/outputs/simpleqa_sft_sweep_0221/simpleqa_lr3e-5_ep3/global_step_150/merged_hf_model}"
@@ -110,9 +136,32 @@ else
 fi
 echo "EPOCHS_LIST=$EPOCHS_LIST"
 echo "LR_LIST=$LR_LIST"
+echo "CLM_MODE=$CLM_MODE"
+if [[ "$CLM_MODE" == "1" ]]; then
+	echo "CLM_TEXT_KEY=$CLM_TEXT_KEY"
+	echo "CLM_MAX_LEN=$CLM_MAX_LEN"
+	echo "CLM_TRUNCATION=$CLM_TRUNCATION"
+fi
 echo "TRAIN_BATCH_SIZE=$TRAIN_BATCH_SIZE"
 echo "SEED=$SEED"
 echo "HF_AUX_SRC_DIR=$HF_AUX_SRC_DIR"
+if [[ "$CLM_MODE" != "1" ]]; then
+	echo "PROMPT_KEY=$PROMPT_KEY"
+	echo "RESPONSE_KEY=$RESPONSE_KEY"
+	if [[ -n "$PROMPT_DICT_KEYS" ]]; then
+		echo "PROMPT_DICT_KEYS=$PROMPT_DICT_KEYS"
+	else
+		echo "PROMPT_DICT_KEYS=(none)"
+	fi
+	if [[ -n "$RESPONSE_DICT_KEYS" ]]; then
+		echo "RESPONSE_DICT_KEYS=$RESPONSE_DICT_KEYS"
+	else
+		echo "RESPONSE_DICT_KEYS=(none)"
+	fi
+	echo "MAX_LENGTH=$MAX_LENGTH"
+	echo "TRUNCATION=$TRUNCATION"
+	echo "FILTER_OVERLONG_PROMPTS=$FILTER_OVERLONG_PROMPTS"
+fi
 
 sync_hf_aux_files () {
 	local merged_dir="$1"
@@ -154,24 +203,34 @@ run_train () {
 		data.train_batch_size="$TRAIN_BATCH_SIZE" \
 		data.train_files="$TRAIN_DATA" \
 		data.val_files="$TRAIN_DATA" \
-		data.prompt_key=extra_info \
-		data.response_key=extra_info \
 		optim.lr="$LR" \
-		data.prompt_dict_keys=['question'] \
-		+data.response_dict_keys=['answer'] \
 		data.micro_batch_size=4 \
 		model.partial_pretrain=Qwen/Qwen2.5-VL-3B-Instruct \
 		trainer.default_local_dir="$out_dir" \
 		trainer.project_name="$PROJECT_NAME" \
 		trainer.experiment_name="$exp_name" \
-		trainer.logger=console \
+		trainer.logger=[console,wandb] \
 		trainer.total_epochs="$epochs" \
 		trainer.resume_mode=auto \
 		trainer.save_freq=100 \
 		trainer.seed="$SEED" \
 		model.fsdp_config.model_dtype="$MODEL_DTYPE" \
 		ulysses_sequence_parallel_size=1 \
-		use_remove_padding=true
+		use_remove_padding=true \
+		$(
+			if [[ "$CLM_MODE" == "1" ]]; then
+				echo "data.text_key=$CLM_TEXT_KEY data.max_length=$CLM_MAX_LEN data.truncation=$CLM_TRUNCATION"
+			else
+				args="data.prompt_key=$PROMPT_KEY data.response_key=$RESPONSE_KEY data.max_length=$MAX_LENGTH data.truncation=$TRUNCATION +data.filter_overlong_prompts=$FILTER_OVERLONG_PROMPTS"
+				if [[ -n "$PROMPT_DICT_KEYS" ]]; then
+					args+=" data.prompt_dict_keys=['$PROMPT_DICT_KEYS']"
+				fi
+				if [[ -n "$RESPONSE_DICT_KEYS" ]]; then
+					args+=" +data.response_dict_keys=['$RESPONSE_DICT_KEYS']"
+				fi
+				echo "$args"
+			fi
+		)
 }
 
 run_generation () {
@@ -249,9 +308,13 @@ run_eval_for_ckpt () {
 	sync_hf_aux_files "$merged_dir"
 
 	# 2) Generation on TRAIN_DATA
-	local gen_out_train="$gen_out_dir/${exp_name}_${step}__on_train.parquet"
-	run_generation "train" "$TRAIN_DATA" "$merged_dir" "$gen_out_train"
-	run_grade "$gen_out_train"
+	if [[ "$CLM_MODE" == "1" ]]; then
+		echo "Skipping train generation/grade for CLM_MODE=1"
+	else
+		local gen_out_train="$gen_out_dir/${exp_name}_${step}__on_train.parquet"
+		run_generation "train" "$TRAIN_DATA" "$merged_dir" "$gen_out_train"
+		run_grade "$gen_out_train"
+	fi
 
 	# 3) Generation on EVAL_DATA (optional)
 	if [[ -n "$EVAL_DATA" ]]; then

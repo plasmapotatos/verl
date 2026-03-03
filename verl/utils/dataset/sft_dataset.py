@@ -20,6 +20,7 @@ Each parquet file contains
 
 import pandas as pd
 import torch
+from tqdm import tqdm
 from omegaconf.listconfig import ListConfig
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer
@@ -44,10 +45,12 @@ class SFTDataset(Dataset):
         response_dict_keys = config.get("response_dict_keys", None)
         max_length = config.get("max_length", 1024)
         truncation = config.get("truncation", "error")
+        filter_overlong_prompts = config.get("filter_overlong_prompts", False)
         use_shm = config.get("use_shm", False)
 
         assert truncation in ["error", "left", "right"]
         self.truncation = truncation
+        self.filter_overlong_prompts = filter_overlong_prompts
         self.use_shm = use_shm
 
         if not isinstance(parquet_files, ListConfig):
@@ -110,6 +113,41 @@ class SFTDataset(Dataset):
         if isinstance(self.responses, pd.DataFrame):
             self.responses = self.responses.squeeze()
         self.responses = self.responses.tolist()
+
+        if self.filter_overlong_prompts:
+            self._maybe_filter_out_long_prompts()
+
+    def _maybe_filter_out_long_prompts(self) -> None:
+        filtered_prompts = []
+        filtered_responses = []
+        total = 0
+        kept = 0
+        for prompt, response in tqdm(
+            zip(self.prompts, self.responses, strict=False),
+            desc="Filtering overlong prompts",
+            total=len(self.prompts),
+        ):
+            total += 1
+            if not isinstance(prompt, str) or not isinstance(response, str):
+                continue
+
+            prompt_chat = [{"role": "user", "content": prompt}]
+            prompt_chat_str = self.tokenizer.apply_chat_template(
+                prompt_chat, add_generation_prompt=True, tokenize=False
+            )
+            response_chat_str = response + self.tokenizer.eos_token
+            total_ids = self.tokenizer(
+                prompt_chat_str + response_chat_str, return_tensors="pt", add_special_tokens=False
+            )["input_ids"][0]
+            if total_ids.shape[0] <= self.max_length:
+                filtered_prompts.append(prompt)
+                filtered_responses.append(response)
+                kept += 1
+
+        self.prompts = filtered_prompts
+        self.responses = filtered_responses
+        filtered = total - kept
+        print(f"Filtered {filtered} overlong samples (kept {kept}/{total}).")
 
     def __len__(self):
         return len(self.prompts)

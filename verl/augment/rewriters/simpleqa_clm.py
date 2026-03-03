@@ -1,4 +1,4 @@
-"""Rewrite SimpleQA samples using web-sourced passages."""
+"""Rewrite SimpleQA samples into text-only CLM rows using web passages."""
 
 from __future__ import annotations
 
@@ -11,9 +11,9 @@ from ..schemas import attach_augmentation_metadata, get_prompt_text
 from .simpleqa_web_utils import extract_urls, parse_json_payload, pick_source_text
 
 
-@register("simpleqa_web_search")
-class SimpleqaWebSearchRewriter:
-    name = "simpleqa_web_search"
+@register("simpleqa_clm")
+class SimpleqaClmRewriter:
+    name = "simpleqa_clm"
 
     def __init__(
         self,
@@ -196,16 +196,7 @@ class SimpleqaWebSearchRewriter:
         self._log("[sample] window sufficient")
 
         updated = deepcopy(sample)
-        prompt_text = f"Write the following Wikipedia-style passage verbatim:\n\n{window}"
-        if "prompt" in updated:
-            updated["prompt"][0]["content"] = prompt_text
-        if "question" in updated:
-            updated["question"] = "Write the following Wikipedia-style passage verbatim:"
-        if "answer" in updated:
-            updated["answer"] = window
-        reward_model = updated.get("reward_model")
-        if isinstance(reward_model, dict) and "ground_truth" in reward_model:
-            reward_model["ground_truth"] = window
+        updated["text"] = window
 
         updated = attach_augmentation_metadata(
             updated,

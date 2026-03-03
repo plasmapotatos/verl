@@ -56,4 +56,4 @@ def _ensure_default_rewriters_loaded() -> None:
     if _REGISTRY:
         return
     # noqa: F401 - import for side effects
-    from .rewriters import llm_rewriter, simpleqa_web_search, templates  # type: ignore
+    from .rewriters import llm_rewriter, simpleqa_clm, simpleqa_rich_sft, simpleqa_web_search, templates  # type: ignore
