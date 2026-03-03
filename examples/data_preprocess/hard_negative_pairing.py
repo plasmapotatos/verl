@@ -129,8 +129,8 @@ def main(dataset: str | None = None) -> None:
             correct = example.get("correct", {})
             negative = example.get("negative", {})
 
-            correct_response = correct.get("model_response", "")
-            negative_response = negative.get("model_response", "")
+            correct_response = correct.get("model_response") or correct.get("ground_truth", "")
+            negative_response = negative.get("model_response") or negative.get("ground_truth", "")
 
             rng = random.Random(args.seed + idx)
             swap = rng.random() < 0.5
@@ -153,7 +153,6 @@ def main(dataset: str | None = None) -> None:
             prompt = _build_prompt(question, choice_1, choice_2)
 
             data = {
-                "images": images,
                 "data_source": data_source,
                 "prompt": [
                     {
@@ -172,6 +171,8 @@ def main(dataset: str | None = None) -> None:
                     "sample_id": example.get("sample_id"),
                 },
             }
+            if images:
+                data["images"] = images
 
             if args.dataset == "simpleqa":
                 data["extra_info"].update(

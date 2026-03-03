@@ -1,3 +1,4 @@
+data/
 
 **/*.pt
 **/checkpoints
@@ -5,6 +6,7 @@
 **/_build/
 **/*.ckpt
 **/outputs
+previews/
 **/*.tar.gz
 **/playground
 **/wandb

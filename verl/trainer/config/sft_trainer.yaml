@@ -9,6 +9,8 @@ data:
   response_key: answer
   prompt_dict_keys: null
   response_dict_keys: null
+  # CLM settings
+  text_key: null  # Set to enable text-only CLM (single text field per row)
   # Multi-turn settings
   multiturn:
     enable: false  # Set to true to use multi-turn dataset

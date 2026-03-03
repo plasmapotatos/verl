@@ -42,10 +42,16 @@ from torchdata.stateful_dataloader import StatefulDataLoader
 from tqdm import tqdm
 from transformers import AutoConfig, AutoModelForCausalLM, PreTrainedModel
 
+try:
+    from transformers import AutoModelForVision2Seq
+except Exception:  # pragma: no cover - optional dependency
+    AutoModelForVision2Seq = None
+
 import verl.utils.hdfs_io as hdfs_io
 from verl.utils.checkpoint.checkpoint_manager import find_latest_ckpt_path, get_checkpoint_tracker_filename
 from verl.utils.checkpoint.fsdp_checkpoint_manager import FSDPCheckpointManager
 from verl.utils.dataset import SFTDataset
+from verl.utils.dataset.clm_dataset import CLMDataset
 from verl.utils.dataset.multiturn_sft_dataset import MultiTurnSFTDataset
 from verl.utils.device import get_device_id, get_device_name, is_cuda_available, is_npu_available
 from verl.utils.distributed import destroy_global_process_group, initialize_global_process_group
@@ -225,7 +231,14 @@ class FSDPSFTTrainer:
         )
 
         with init_context():
-            self.model: PreTrainedModel = AutoModelForCausalLM.from_pretrained(
+            is_qwen25_vl = getattr(config, "model_type", "") in {"qwen2_5_vl", "qwen2_vl"}
+            if is_qwen25_vl:
+                assert AutoModelForVision2Seq is not None, "Need a newer transformers w/ AutoModelForVision2Seq"
+                model_cls = AutoModelForVision2Seq
+            else:
+                model_cls = AutoModelForCausalLM
+
+            self.model: PreTrainedModel = model_cls.from_pretrained(
                 local_model_path,
                 config=config,
                 torch_dtype=torch_dtype,
@@ -809,6 +822,9 @@ def create_sft_dataset(data_paths, data_config, tokenizer):
         from verl.utils.import_utils import load_extern_type
 
         dataset_cls = load_extern_type(data_config.custom_cls.path, data_config.custom_cls.name)
+    # Then check if CLM dataset should be used
+    elif data_config.get("text_key", None):
+        dataset_cls = CLMDataset
     # Then check if multi-turn dataset should be used
     elif data_config.get("multiturn", {}).get("enable", False):
         dataset_cls = MultiTurnSFTDataset
