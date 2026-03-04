@@ -7,4 +7,8 @@ TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/base/train.parquet"
 
 PROJECT_NAME="$PROJECT_NAME" \
 TRAIN_DATA="$TRAIN_DATA" \
+PROMPT_KEY="question" \
+RESPONSE_KEY="answer" \
+PROMPT_DICT_KEYS="" \
+RESPONSE_DICT_KEYS="" \
 bash experiments/sft/run_sft_sweep_with_eval.sh

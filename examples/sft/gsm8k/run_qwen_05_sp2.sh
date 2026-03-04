@@ -13,8 +13,8 @@ shift 2
 
 torchrun --standalone --nnodes=1 --nproc_per_node=$nproc_per_node \
      -m verl.trainer.fsdp_sft_trainer \
-    data.train_files=$HOME/data/gsm8k/train.parquet \
-    data.val_files=$HOME/data/gsm8k/test.parquet \
+    data.train_files=./data/gsm8k/train.parquet \
+    data.val_files=./data/gsm8k/test.parquet \
     data.prompt_key=extra_info \
     data.response_key=extra_info \
     optim.lr=1e-4 \
@@ -26,6 +26,6 @@ torchrun --standalone --nnodes=1 --nproc_per_node=$nproc_per_node \
     trainer.project_name=gsm8k-sft \
     trainer.experiment_name=gsm8k-sft-qwen-2.5-0.5b-instruct-sp2 \
     trainer.logger=console \
-    trainer.total_training_steps=1 $@ \
+    trainer.total_epochs=2 $@ \
     ulysses_sequence_parallel_size=2 \
     use_remove_padding=true

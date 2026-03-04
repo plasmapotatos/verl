@@ -13,8 +13,8 @@ shift 2
 
 torchrun --standalone --nnodes=1 --nproc_per_node=$nproc_per_node \
      -m verl.trainer.fsdp_sft_trainer \
-    data.train_files=$HOME/data/gsm8k/train.parquet \
-    data.val_files=$HOME/data/gsm8k/test.parquet \
+    data.train_files=./data/gsm8k/train.parquet \
+    data.val_files=./data/gsm8k/test.parquet \
     data.prompt_key=extra_info \
     data.response_key=extra_info \
     optim.lr=1e-4 \

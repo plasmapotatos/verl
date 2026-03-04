@@ -15,7 +15,7 @@ export RAY_USAGE_STATS_ENABLED=0
 # Required env vars (or edit defaults below):
 #   PROJECT_NAME   e.g. "simpleqa_sft_aug"
 #   TRAIN_DATA     path to parquet used for SFT training
-#   EVAL_DATA      path to parquet used for eval (optional)
+#   EVAL_DATA      space-separated paths to parquet used for eval (optional)
 #
 # Optional:
 #   EXP_PREFIX     prefix for experiment_name (default: "sft")
@@ -114,9 +114,13 @@ if [[ ! -f "$TRAIN_DATA" ]]; then
 	echo "ERROR: TRAIN_DATA not found: $TRAIN_DATA"
 	exit 1
 fi
-if [[ -n "$EVAL_DATA" && ! -f "$EVAL_DATA" ]]; then
-	echo "ERROR: EVAL_DATA not found: $EVAL_DATA"
-	exit 1
+if [[ -n "$EVAL_DATA" ]]; then
+	for eval_path in $EVAL_DATA; do
+		if [[ ! -f "$eval_path" ]]; then
+			echo "ERROR: EVAL_DATA not found: $eval_path"
+			exit 1
+		fi
+	done
 fi
 
 # Output layout: outputs/{project_name}/{experiment_name}
@@ -307,20 +311,15 @@ run_eval_for_ckpt () {
 	echo "Syncing HF aux files into: $merged_dir"
 	sync_hf_aux_files "$merged_dir"
 
-	# 2) Generation on TRAIN_DATA
-	if [[ "$CLM_MODE" == "1" ]]; then
-		echo "Skipping train generation/grade for CLM_MODE=1"
-	else
-		local gen_out_train="$gen_out_dir/${exp_name}_${step}__on_train.parquet"
-		run_generation "train" "$TRAIN_DATA" "$merged_dir" "$gen_out_train"
-		run_grade "$gen_out_train"
-	fi
-
-	# 3) Generation on EVAL_DATA (optional)
+	# 2) Generation on EVAL_DATA (optional)
 	if [[ -n "$EVAL_DATA" ]]; then
-		local gen_out_eval="$gen_out_dir/${exp_name}_${step}__on_eval.parquet"
-		run_generation "eval" "$EVAL_DATA" "$merged_dir" "$gen_out_eval"
-		run_grade "$gen_out_eval"
+		for eval_path in $EVAL_DATA; do
+			local eval_tag
+			eval_tag="eval_$(basename "${eval_path%.parquet}")"
+			local gen_out_eval="$gen_out_dir/${exp_name}_${step}__on_${eval_tag}.parquet"
+			run_generation "eval" "$eval_path" "$merged_dir" "$gen_out_eval"
+			run_grade "$gen_out_eval"
+		done
 	else
 		echo "Skipping eval generation/grade (EVAL_DATA not provided)"
 	fi
@@ -358,3 +357,11 @@ echo ""
 echo "DONE."
 echo "Training outputs: $ROOT/{experiment_name}/global_step_*"
 echo "Generation outputs: $ROOT/{experiment_name}/generations"
+
+if [[ -n "$EVAL_DATA" ]]; then
+	echo ""
+	echo "Plotting eval metrics -> $ROOT/plots"
+	python3 "$VERL_DIR/scripts/plot_sft_eval_metrics.py" \
+		--project-dir "$ROOT" \
+		--output-dir "$ROOT/plots"
+fi
