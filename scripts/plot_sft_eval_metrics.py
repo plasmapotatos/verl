@@ -132,6 +132,37 @@ def _plot_metric(points: List[EvalPoint], output_dir: Path) -> None:
             plt.close()
 
 
+def _plot_metric_all_datasets(points: List[EvalPoint], output_dir: Path) -> None:
+    by_dataset: Dict[str, Dict[int, List[EvalPoint]]] = {}
+    for point in points:
+        by_dataset.setdefault(point.dataset, {}).setdefault(point.epochs, []).append(point)
+
+    combined_dir = output_dir / "combined"
+    combined_dir.mkdir(parents=True, exist_ok=True)
+
+    for metric in METRICS:
+        plt.figure(figsize=(7, 4.5))
+        for dataset, epochs_map in sorted(by_dataset.items(), key=lambda item: item[0]):
+            epochs = sorted(epochs_map.keys())
+            values = []
+            for ep in epochs:
+                ep_points = epochs_map[ep]
+                values.append(max(p.metrics.get(metric, 0.0) for p in ep_points))
+
+            plt.plot(epochs, values, marker="o", label=dataset)
+
+        plt.title(f"{metric} vs epochs (best across LRs)")
+        plt.xlabel("epochs")
+        plt.ylabel(metric)
+        plt.grid(True, linestyle="--", alpha=0.4)
+        plt.legend(loc="best", fontsize=9)
+        plt.tight_layout()
+
+        out_path = combined_dir / f"{metric}_all_datasets.png"
+        plt.savefig(out_path, dpi=150)
+        plt.close()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -158,6 +189,7 @@ def main() -> None:
 
     os.makedirs(output_dir, exist_ok=True)
     _plot_metric(points, output_dir)
+    _plot_metric_all_datasets(points, output_dir)
 
     print(f"Wrote plots to: {output_dir}")
 

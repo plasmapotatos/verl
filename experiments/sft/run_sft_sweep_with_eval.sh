@@ -95,7 +95,7 @@ PROMPT_DICT_KEYS="${PROMPT_DICT_KEYS-}"
 RESPONSE_DICT_KEYS="${RESPONSE_DICT_KEYS-}"
 
 # HF aux files to copy into merged_hf_model (same as your inference script)
-HF_AUX_SRC_DIR="${HF_AUX_SRC_DIR:-$VERL_DIR/outputs/simpleqa_sft_sweep_0221/simpleqa_lr3e-5_ep3/global_step_150/merged_hf_model}"
+HF_AUX_SRC_DIR="${HF_AUX_SRC_DIR:-$VERL_DIR/configs/hf_aux_files}"
 PREPROC_SRC="$HF_AUX_SRC_DIR/preprocessor_config.json"
 CHAT_TEMPLATE_SRC="$HF_AUX_SRC_DIR/chat_template.json"
 
