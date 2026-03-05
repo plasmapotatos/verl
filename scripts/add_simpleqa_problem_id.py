@@ -11,7 +11,7 @@ def add_problem_id(input_csv: Path, output_csv: Path) -> None:
         if header is None:
             raise ValueError("Input CSV is empty.")
 
-        new_header = header + ["problem_id"]
+        new_header = header + ["id"]
         rows = list(reader)
 
     with output_csv.open("w", encoding="utf-8", newline="") as f_out:

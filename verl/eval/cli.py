@@ -15,6 +15,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--use-judge", action="store_true", help="Use OpenAI judge")
     parser.add_argument("--cache-dir", help="Dataset cache directory")
     parser.add_argument("--limit", type=int, help="Limit number of rows")
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=16,
+        help="Number of parallel workers for evaluation (default: 16)",
+    )
     parser.add_argument("--list-datasets", action="store_true", help="List datasets")
     return parser
 
@@ -40,6 +46,7 @@ def main(argv: list[str] | None = None) -> int:
             use_judge=args.use_judge,
             cache_dir=args.cache_dir,
             limit=args.limit,
+            workers=args.workers,
         )
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)

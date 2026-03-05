@@ -66,13 +66,18 @@ def _collect_eval_points(project_dir: Path) -> List[EvalPoint]:
     points: List[EvalPoint] = []
     eval_files = list(project_dir.glob("*/generations/*_eval.json"))
     best_by_exp_dataset: Dict[Tuple[str, str], EvalPoint] = {}
+    baseline_by_dataset: Dict[str, EvalPoint] = {}
 
     for eval_file in eval_files:
         exp_name = eval_file.parent.parent.name
-        lr_ep = _parse_lr_ep(exp_name)
-        if lr_ep is None:
-            continue
-        lr, epochs = lr_ep
+        if exp_name == "base":
+            lr = 0.0
+            epochs = 0
+        else:
+            lr_ep = _parse_lr_ep(exp_name)
+            if lr_ep is None:
+                continue
+            lr, epochs = lr_ep
         dataset_label = _parse_dataset_label(eval_file.name)
         step = _parse_step(eval_file.name)
 
@@ -87,11 +92,16 @@ def _collect_eval_points(project_dir: Path) -> List[EvalPoint]:
             dataset=dataset_label,
             metrics=metrics,
         )
-        key = (exp_name, dataset_label)
-        if key not in best_by_exp_dataset or step > best_by_exp_dataset[key].step:
-            best_by_exp_dataset[key] = point
+        if exp_name == "base":
+            if dataset_label not in baseline_by_dataset or step > baseline_by_dataset[dataset_label].step:
+                baseline_by_dataset[dataset_label] = point
+        else:
+            key = (exp_name, dataset_label)
+            if key not in best_by_exp_dataset or step > best_by_exp_dataset[key].step:
+                best_by_exp_dataset[key] = point
 
     points.extend(best_by_exp_dataset.values())
+    points.extend(baseline_by_dataset.values())
     return points
 
 
@@ -106,8 +116,12 @@ def _plot_metric(points: List[EvalPoint], output_dir: Path) -> None:
         dataset_dir.mkdir(parents=True, exist_ok=True)
 
         by_lr: Dict[float, List[EvalPoint]] = {}
+        baseline_point = None
         for point in dataset_points:
-            by_lr.setdefault(point.lr, []).append(point)
+            if point.epochs == 0:
+                baseline_point = point
+            else:
+                by_lr.setdefault(point.lr, []).append(point)
 
         for metric in METRICS:
             metric_dir = dataset_dir / metric
@@ -118,6 +132,9 @@ def _plot_metric(points: List[EvalPoint], output_dir: Path) -> None:
                 lr_points = sorted(lr_points, key=lambda p: p.epochs)
                 epochs = [p.epochs for p in lr_points]
                 values = [p.metrics.get(metric, 0.0) for p in lr_points]
+                if baseline_point is not None:
+                    epochs = [0] + epochs
+                    values = [baseline_point.metrics.get(metric, 0.0)] + values
                 plt.plot(epochs, values, marker="o", label=f"lr={_format_lr(lr)}")
 
             plt.title(f"{metric} vs epochs")
@@ -134,7 +151,11 @@ def _plot_metric(points: List[EvalPoint], output_dir: Path) -> None:
 
 def _plot_metric_all_datasets(points: List[EvalPoint], output_dir: Path) -> None:
     by_dataset: Dict[str, Dict[int, List[EvalPoint]]] = {}
+    baseline_by_dataset: Dict[str, EvalPoint] = {}
     for point in points:
+        if point.epochs == 0:
+            baseline_by_dataset[point.dataset] = point
+            continue
         by_dataset.setdefault(point.dataset, {}).setdefault(point.epochs, []).append(point)
 
     combined_dir = output_dir / "combined"
@@ -148,6 +169,11 @@ def _plot_metric_all_datasets(points: List[EvalPoint], output_dir: Path) -> None
             for ep in epochs:
                 ep_points = epochs_map[ep]
                 values.append(max(p.metrics.get(metric, 0.0) for p in ep_points))
+
+            baseline = baseline_by_dataset.get(dataset)
+            if baseline is not None:
+                epochs = [0] + epochs
+                values = [baseline.metrics.get(metric, 0.0)] + values
 
             plt.plot(epochs, values, marker="o", label=dataset)
 

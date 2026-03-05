@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import concurrent.futures
 import logging
-from typing import Any, Dict, List, Optional
+import threading
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 
@@ -25,6 +27,7 @@ def run(
     use_judge: bool,
     cache_dir: Optional[str] = None,
     limit: Optional[int] = None,
+    workers: Optional[int] = None,
 ) -> Dict[str, Any]:
     logger.info("Starting evaluation", extra={"dataset": dataset_name, "use_judge": use_judge})
     dataset_kwargs = {}
@@ -46,24 +49,30 @@ def run(
     evaluations: List[str] = []
     rows: List[Dict[str, Any]] = []
 
-    row_iter = df.iterrows()
-    if tqdm is not None:
-        row_iter = tqdm(row_iter, total=total_rows, desc="Evaluating", unit="row")
+    records = df.to_dict(orient="records")
 
-    for _, row in row_iter:
-        record = row.to_dict()
-        # print(record)
+    def _eval_record(index: int, record: Dict[str, Any]) -> Tuple[int, Dict[str, Any], List[str]]:
         sample_id = coerce_id(record)
         responses = coerce_responses(record)
-        # print(f"Evaluating sample_id={sample_id} with responses={responses}")
         graders: List[Dict[str, Any]] = []
+        evaluations_local: List[str] = []
+
+        if use_judge:
+            if not hasattr(_eval_record, "_thread_local"):
+                _eval_record._thread_local = threading.local()
+            thread_local = _eval_record._thread_local
+            if getattr(thread_local, "judge", None) is None:
+                thread_local.judge = OpenAIJudge()
+            local_judge = thread_local.judge
+        else:
+            local_judge = None
 
         for predicted in responses:
             try:
                 sample = dataset.get_sample_by_id(sample_id)
-                if use_judge and judge is not None:
+                if use_judge and local_judge is not None:
                     prompt = dataset.build_judge_prompt(sample, predicted)
-                    raw = judge.generate(prompt)
+                    raw = local_judge.generate(prompt)
                     evaluation = dataset.parse_judge_output(raw)
                 else:
                     prompt = ""
@@ -82,12 +91,44 @@ def run(
                     "evaluation": evaluation,
                 }
             )
-            evaluations.append(evaluation)
+            evaluations_local.append(evaluation)
 
         record["coerced_id"] = sample_id
         record["coerced_responses"] = responses
         record["graders"] = graders
-        rows.append(json_safe(record))
+        return index, json_safe(record), evaluations_local
+
+    if workers is None or workers <= 1:
+        row_iter = enumerate(records)
+        if tqdm is not None:
+            row_iter = tqdm(row_iter, total=total_rows, desc="Evaluating", unit="row")
+
+        for idx, record in row_iter:
+            _, row_out, evals_out = _eval_record(idx, record)
+            rows.append(row_out)
+            evaluations.extend(evals_out)
+    else:
+        rows = [None] * total_rows
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
+            futures = {
+                executor.submit(_eval_record, idx, record): idx for idx, record in enumerate(records)
+            }
+            if tqdm is not None:
+                progress = tqdm(total=total_rows, desc="Evaluating", unit="row")
+            else:
+                progress = None
+
+            for future in concurrent.futures.as_completed(futures):
+                idx, row_out, evals_out = future.result()
+                rows[idx] = row_out
+                evaluations.extend(evals_out)
+                if progress is not None:
+                    progress.update(1)
+
+            if progress is not None:
+                progress.close()
+
+        rows = [row for row in rows if row is not None]
 
     metrics = compute_metrics(evaluations)
     output = {"metrics": json_safe(metrics), "rows": rows}

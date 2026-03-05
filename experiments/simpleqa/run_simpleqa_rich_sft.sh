@@ -6,7 +6,7 @@ PROJECT_NAME="simpleqa_rich_sft"
 
 TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/rich_sft/simpleqa_rich_sft_train.parquet"
 
-EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/rich_sft/simpleqa_rich_sft_train_frac0.1.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/base/train_frac0.1.parquet"
+EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/rich_sft/simpleqa_rich_sft_train_frac0.1.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/rich_sft/simpleqa_rich_sft_train_frac0.1_origqa.parquet"
 
 PROJECT_NAME="$PROJECT_NAME" \
 TRAIN_DATA="$TRAIN_DATA" \

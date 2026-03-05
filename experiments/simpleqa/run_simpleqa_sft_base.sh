@@ -4,6 +4,7 @@ set -euo pipefail
 PROJECT_NAME="simpleqa_sft_base_sweep"
 
 TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/base/train.parquet"
+EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/base/train_frac0.1.parquet"
 
 PROJECT_NAME="$PROJECT_NAME" \
 TRAIN_DATA="$TRAIN_DATA" \

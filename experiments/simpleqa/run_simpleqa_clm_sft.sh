@@ -5,7 +5,7 @@ PROJECT_NAME="simpleqa_clm"
 
 TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/clm/simpleqa_clm_train.parquet"
 
-EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/base/train_frac0.1.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/clm/simpleqa_clm_train_frac0.1.parquet"
+EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/clm/simpleqa_clm_train_frac0.1_origqa.parquet"
 
 PROJECT_NAME="$PROJECT_NAME" \
 TRAIN_DATA="$TRAIN_DATA" \

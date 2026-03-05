@@ -273,16 +273,19 @@ class SimpleqaRichSftRewriter:
         rich_answer = rich["rich_answer"]
 
         updated = deepcopy(sample)
-        prompt_text = f"{rich_question}\n\nReference:\n{window}"
-        if "prompt" in updated:
-            updated["prompt"][0]["content"] = prompt_text
+
+        updated["prompt"] = [{"role": "user", "content": rich_question}]
         if "question" in updated:
-            updated["question"] = prompt_text
+            updated["question"] = rich_question
         if "answer" in updated:
             updated["answer"] = rich_answer
         extra_info = updated.get("extra_info")
         if isinstance(extra_info, dict) and "question" in extra_info:
-            extra_info["question"] = prompt_text
+            extra_info["original_question"] = extra_info.get("question")
+            extra_info["original_answer"] = extra_info.get("answer")
+            extra_info["question"] = rich_question
+            extra_info["answer"] = rich_answer
+            extra_info["reference"] = window
         reward_model = updated.get("reward_model")
         if isinstance(reward_model, dict) and "ground_truth" in reward_model:
             reward_model["ground_truth"] = rich_answer

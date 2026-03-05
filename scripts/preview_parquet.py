@@ -37,8 +37,8 @@ def main():
     )
     parser.add_argument(
         "--save-html",
-        default=os.path.join("previews", "preview_parquet.html"),
-        help="Path to save full HTML preview. Default: previews/preview_parquet.html.",
+        default=None,
+        help="Path to save HTML preview. If omitted, HTML is not generated.",
     )
     parser.add_argument(
         "--num",
@@ -63,7 +63,7 @@ def main():
 
     parquet_path = os.path.expanduser(args.parquet_path)
     save_path = _resolve_path(args.save_path)
-    html_path = _resolve_path(args.save_html)
+    html_path = _resolve_path(args.save_html) if args.save_html else None
 
     try:
         dataset = datasets.load_dataset("parquet", data_files=parquet_path)["train"]
@@ -133,10 +133,12 @@ def main():
         print(f"=== row {i} ===")
         print(json.dumps(row, ensure_ascii=False, indent=2))
 
-    all_rows = []
-    for i in range(dataset_length):
-        row = _to_jsonable(dataset[i])
-        all_rows.append({"index": i, "row": row})
+    all_rows = preview_rows
+    if html_path is not None:
+        all_rows = []
+        for i in range(n):
+            row = _to_jsonable(dataset[i])
+            all_rows.append({"index": i, "row": row})
 
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
     with open(save_path, "w", encoding="utf-8") as f:
@@ -147,14 +149,17 @@ def main():
             indent=2,
         )
 
+        if html_path is None:
+            return
+
         os.makedirs(os.path.dirname(html_path), exist_ok=True)
         headers = []
         header_set = set()
         for item in all_rows:
-                for key in item["row"].keys():
-                        if key not in header_set:
-                                header_set.add(key)
-                                headers.append(key)
+            for key in item["row"].keys():
+                if key not in header_set:
+                    header_set.add(key)
+                    headers.append(key)
 
         def _cell_value(value):
                 if isinstance(value, (dict, list)):
@@ -163,20 +168,20 @@ def main():
 
         rows_html = []
         for item in all_rows:
-                row = item["row"]
-                cells = []
-                row_text_parts = [str(item["index"])]
-                for key in headers:
-                        value = _cell_value(row.get(key))
-                        row_text_parts.append(value)
-                        cells.append(f"<td>{html.escape(value)}</td>")
-                row_text = " ".join(row_text_parts).lower()
-                rows_html.append(
-                        f"<tr data-row=\"{html.escape(row_text)}\">"
-                        f"<td>{item['index']}</td>"
-                        + "".join(cells)
-                        + "</tr>"
-                )
+            row = item["row"]
+            cells = []
+            row_text_parts = [str(item["index"])]
+            for key in headers:
+                value = _cell_value(row.get(key))
+                row_text_parts.append(value)
+                cells.append(f"<td>{html.escape(value)}</td>")
+            row_text = " ".join(row_text_parts).lower()
+            rows_html.append(
+                f"<tr data-row=\"{html.escape(row_text)}\">"
+                f"<td>{item['index']}</td>"
+                + "".join(cells)
+                + "</tr>"
+            )
 
         html_content = f"""
 <!doctype html>
@@ -256,7 +261,7 @@ def main():
 """
 
         with open(html_path, "w", encoding="utf-8") as f:
-                f.write(html_content)
+            f.write(html_content)
 
     if args.check_images:
         empty_count = 0

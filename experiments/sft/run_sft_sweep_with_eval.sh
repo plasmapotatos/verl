@@ -41,6 +41,7 @@ export RAY_USAGE_STATS_ENABLED=0
 #   PROMPT_LEN     (default: 2048)
 #   RESP_LEN       (default: 1024)
 #   GPU_MEM_UTIL   (default: 0.8)
+#   RUN_BASE_EVAL  run base Qwen eval before sweeps (default: 1)
 #
 # Example:
 #   PROJECT_NAME=simpleqa_sft_llm_direct \
@@ -82,6 +83,7 @@ TEMP="${TEMP:-0}"
 PROMPT_LEN="${PROMPT_LEN:-2048}"
 RESP_LEN="${RESP_LEN:-1024}"
 GPU_MEM_UTIL="${GPU_MEM_UTIL:-0.8}"
+RUN_BASE_EVAL="${RUN_BASE_EVAL:-1}"
 
 # Sequence settings
 MAX_LENGTH="${MAX_LENGTH:-1024}"
@@ -149,6 +151,7 @@ fi
 echo "TRAIN_BATCH_SIZE=$TRAIN_BATCH_SIZE"
 echo "SEED=$SEED"
 echo "HF_AUX_SRC_DIR=$HF_AUX_SRC_DIR"
+echo "RUN_BASE_EVAL=$RUN_BASE_EVAL"
 if [[ "$CLM_MODE" != "1" ]]; then
 	echo "PROMPT_KEY=$PROMPT_KEY"
 	echo "RESPONSE_KEY=$RESPONSE_KEY"
@@ -267,6 +270,47 @@ run_generation () {
 	echo "Wrote $out_path"
 }
 
+run_base_eval () {
+	if [[ -z "$EVAL_DATA" ]]; then
+		echo "Skipping base eval (EVAL_DATA not provided)"
+		return
+	fi
+	if [[ "$RUN_BASE_EVAL" != "1" ]]; then
+		echo "Skipping base eval (RUN_BASE_EVAL=$RUN_BASE_EVAL)"
+		return
+	fi
+
+	local base_dir="$ROOT/base"
+	local gen_out_dir="$base_dir/generations"
+	mkdir -p "$gen_out_dir"
+
+	for eval_path in $EVAL_DATA; do
+		local eval_tag
+		eval_tag="eval_$(basename "${eval_path%.parquet}")"
+		local gen_out_eval="$gen_out_dir/base_global_step_0__on_${eval_tag}.parquet"
+		if [[ -f "$gen_out_eval" ]]; then
+			echo "Base generation already exists: $gen_out_eval (skipping)"
+		else
+			echo "Base generation (Qwen) -> $gen_out_eval"
+			python3 -m verl.trainer.main_generation \
+				trainer.nnodes=1 \
+				trainer.n_gpus_per_node="$NGPU_GEN" \
+				data.path="$eval_path" \
+				data.prompt_key=prompt \
+				data.n_samples="$N_SAMPLES" \
+				data.output_path="$gen_out_eval" \
+				model.path=Qwen/Qwen2.5-VL-3B-Instruct \
+				+model.trust_remote_code=True \
+				rollout.temperature="$TEMP" \
+				rollout.prompt_length="$PROMPT_LEN" \
+				rollout.response_length="$RESP_LEN" \
+				rollout.tensor_model_parallel_size="$TP_SIZE" \
+				rollout.gpu_memory_utilization="$GPU_MEM_UTIL"
+		fi
+		run_grade "$gen_out_eval"
+	done
+}
+
 run_grade () {
 	local parquet_path="$1"
 	local out_json="${parquet_path%.parquet}_eval.json"
@@ -345,6 +389,8 @@ run_one () {
 
 echo ""
 echo "==== SFT SWEEP + EVAL (project=$PROJECT_NAME) ===="
+
+run_base_eval
 
 for lr in $LR_LIST; do
 	LR="$lr"
