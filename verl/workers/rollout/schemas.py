@@ -260,10 +260,11 @@ class AsyncRolloutRequest(BaseModel):
         multi_modal_inputs: Optional[dict[str, torch.Tensor]] = None,
     ) -> torch.Tensor:
         # special case for qwen2vl
-        is_qwen2vl = (
-            hasattr(processing_class, "image_processor")
-            and "Qwen2VLImageProcessor" in processing_class.image_processor.__class__.__name__
-        )
+        if hasattr(processing_class, "image_processor"):
+            image_processor_name = processing_class.image_processor.__class__.__name__
+            is_qwen2vl = "Qwen2VLImageProcessor" in image_processor_name or "Qwen2_5_VLImageProcessor" in image_processor_name
+        else:
+            is_qwen2vl = False
         if is_qwen2vl:
             from verl.models.transformers.qwen2_vl import get_rope_index
 

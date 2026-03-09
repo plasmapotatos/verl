@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
-"""Plot SFT eval metrics by learning rate and epoch."""
-
-from __future__ import annotations
+"""Plot SFT eval metrics with global-step x-axis."""
 
 import argparse
 import json
@@ -9,7 +7,7 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 import matplotlib
 
@@ -17,7 +15,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 
-METRICS = ("attempt_rate", "accuracy", "accuracy_attempted")
+METRICS = ("attempt_rate", "accuracy", "accuracy_attempted", "pass_at_k")
 
 
 @dataclass(frozen=True)
@@ -27,82 +25,160 @@ class EvalPoint:
     step: int
     dataset: str
     metrics: Dict[str, float]
+    exp_name: str
 
 
-def _parse_lr_ep(exp_name: str) -> Tuple[float, int] | None:
-    match = re.search(r"_lr([0-9eE.+-]+)_ep(\d+)", exp_name)
+def _parse_lr_ep(exp_name: str) -> Optional[Tuple[float, int]]:
+    match = re.search(r"_lr([0-9eE.+-]+)_ep(?:max)?(\d+)", exp_name)
     if not match:
         return None
-    lr = float(match.group(1))
-    epochs = int(match.group(2))
-    return lr, epochs
+    return float(match.group(1)), int(match.group(2))
 
 
-def _format_lr(lr: float) -> str:
-    return f"{lr:.1e}"
-
-
-def _parse_step(filename: str) -> int:
-    match = re.search(r"global_step_(\d+)", filename)
-    if not match:
-        return -1
-    return int(match.group(1))
+def _parse_step(text: str) -> int:
+    match = re.search(r"global_step_(\d+)", text)
+    return int(match.group(1)) if match else -1
 
 
 def _parse_dataset_label(filename: str) -> str:
     base = filename
     if base.endswith("_eval.json"):
         base = base[: -len("_eval.json")]
-    if "__on_" not in base:
-        return "unknown"
-    return base.split("__on_", 1)[1]
+    if "__on_eval_" in base:
+        return base.split("__on_eval_", 1)[1]
+    if "__on_" in base:
+        return base.split("__on_", 1)[1]
+    return "unknown"
+
+
+def _normalize_dataset_label(label: str) -> str:
+    if label.startswith("eval_"):
+        return label[len("eval_") :]
+    return label
 
 
 def _sanitize_label(label: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", label)
 
 
+def _dataset_from_eval_data(eval_data: str) -> str:
+    name = Path(eval_data).name
+    if name.endswith(".parquet"):
+        name = name[: -len(".parquet")]
+    return name
+
+
+def _discover_experiment_dirs(project_dir: Path) -> List[Path]:
+    if project_dir.name == "generations":
+        return [project_dir.parent.parent]
+    if project_dir.name.startswith("global_step_"):
+        return [project_dir.parent]
+    if list(project_dir.glob("global_step_*/generations")):
+        return [project_dir]
+    return sorted(
+        p
+        for p in project_dir.iterdir()
+        if p.is_dir() and list(p.glob("global_step_*/generations"))
+    )
+
+
+def _iter_generation_dirs(exp_dir: Path) -> List[Path]:
+    return sorted(p for p in exp_dir.glob("global_step_*/generations") if p.is_dir())
+
+
 def _collect_eval_points(project_dir: Path) -> List[EvalPoint]:
     points: List[EvalPoint] = []
-    eval_files = list(project_dir.glob("*/generations/*_eval.json"))
-    best_by_exp_dataset: Dict[Tuple[str, str], EvalPoint] = {}
-    baseline_by_dataset: Dict[str, EvalPoint] = {}
+    exp_dirs = _discover_experiment_dirs(project_dir)
 
-    for eval_file in eval_files:
-        exp_name = eval_file.parent.parent.name
+    for exp_dir in exp_dirs:
+        exp_name = exp_dir.name
+        lr_ep = _parse_lr_ep(exp_name)
         if exp_name == "base":
-            lr = 0.0
-            epochs = 0
-        else:
-            lr_ep = _parse_lr_ep(exp_name)
-            if lr_ep is None:
-                continue
+            lr, epochs = 0.0, 0
+        elif lr_ep is not None:
             lr, epochs = lr_ep
-        dataset_label = _parse_dataset_label(eval_file.name)
-        step = _parse_step(eval_file.name)
-
-        with eval_file.open("r", encoding="utf-8") as handle:
-            payload = json.load(handle)
-        metrics = payload.get("metrics", {}) if isinstance(payload, dict) else {}
-
-        point = EvalPoint(
-            lr=lr,
-            epochs=epochs,
-            step=step,
-            dataset=dataset_label,
-            metrics=metrics,
-        )
-        if exp_name == "base":
-            if dataset_label not in baseline_by_dataset or step > baseline_by_dataset[dataset_label].step:
-                baseline_by_dataset[dataset_label] = point
         else:
-            key = (exp_name, dataset_label)
-            if key not in best_by_exp_dataset or step > best_by_exp_dataset[key].step:
-                best_by_exp_dataset[key] = point
+            lr, epochs = 0.0, 0
 
-    points.extend(best_by_exp_dataset.values())
-    points.extend(baseline_by_dataset.values())
+        for gen_dir in _iter_generation_dirs(exp_dir):
+            step = _parse_step(str(gen_dir.parent))
+            for eval_file in sorted(gen_dir.glob("*_eval.json")):
+                dataset_label = _normalize_dataset_label(_parse_dataset_label(eval_file.name))
+                with eval_file.open("r", encoding="utf-8") as handle:
+                    payload = json.load(handle)
+                metrics = payload.get("metrics", {}) if isinstance(payload, dict) else {}
+                if not isinstance(metrics, dict):
+                    continue
+                points.append(
+                    EvalPoint(
+                        lr=lr,
+                        epochs=epochs,
+                        step=step,
+                        dataset=dataset_label,
+                        metrics=metrics,
+                        exp_name=exp_name,
+                    )
+                )
+
+        for pass_file in sorted(exp_dir.glob("global_step_*/pass@k/pass_at_k_*.json")):
+            step = _parse_step(str(pass_file))
+            with pass_file.open("r", encoding="utf-8") as handle:
+                payload = json.load(handle)
+            if not isinstance(payload, dict):
+                continue
+
+            eval_data = payload.get("eval_data")
+            if not isinstance(eval_data, str):
+                continue
+            dataset_label = _dataset_from_eval_data(eval_data)
+            dataset_label = _normalize_dataset_label(dataset_label)
+
+            pass_info = payload.get("pass_at_k", {})
+            pass_val = pass_info.get("pass_at_k") if isinstance(pass_info, dict) else None
+            if pass_val is None:
+                continue
+            k = payload.get("k")
+            metric_name = f"pass_at_k_{k}" if k is not None else "pass_at_k"
+
+            points.append(
+                EvalPoint(
+                    lr=lr,
+                    epochs=epochs,
+                    step=step,
+                    dataset=dataset_label,
+                    metrics={metric_name: float(pass_val), "pass_at_k": float(pass_val)},
+                    exp_name=exp_name,
+                )
+            )
+
     return points
+
+
+def _steps_per_epoch_label(points: List[EvalPoint]) -> Optional[str]:
+    per_exp: Dict[str, float] = {}
+    for point in points:
+        if point.epochs <= 0 or point.step < 0:
+            continue
+        prev = per_exp.get(point.exp_name)
+        per_exp[point.exp_name] = max(prev, float(point.step)) if prev is not None else float(point.step)
+
+    ratios: List[float] = []
+    for exp_name, max_step in per_exp.items():
+        exp_epochs = max(p.epochs for p in points if p.exp_name == exp_name)
+        if exp_epochs <= 0:
+            continue
+        ratios.append(max_step / float(exp_epochs))
+
+    if not ratios:
+        return None
+
+    min_ratio = min(ratios)
+    max_ratio = max(ratios)
+    if max_ratio <= 0:
+        return None
+    if (max_ratio - min_ratio) <= max(1.0, 0.05 * max_ratio):
+        return f"steps/epoch≈{int(round(sum(ratios) / len(ratios)))}"
+    return f"steps/epoch≈{int(round(min_ratio))}-{int(round(max_ratio))}"
 
 
 def _plot_metric(points: List[EvalPoint], output_dir: Path) -> None:
@@ -111,82 +187,119 @@ def _plot_metric(points: List[EvalPoint], output_dir: Path) -> None:
         by_dataset.setdefault(point.dataset, []).append(point)
 
     for dataset, dataset_points in by_dataset.items():
-        dataset_label = _sanitize_label(dataset)
-        dataset_dir = output_dir / dataset_label
+        dataset_dir = output_dir / _sanitize_label(dataset)
         dataset_dir.mkdir(parents=True, exist_ok=True)
 
-        by_lr: Dict[float, List[EvalPoint]] = {}
-        baseline_point = None
-        for point in dataset_points:
-            if point.epochs == 0:
-                baseline_point = point
-            else:
-                by_lr.setdefault(point.lr, []).append(point)
+        metric_names = sorted({m for p in dataset_points for m in p.metrics.keys() if isinstance(p.metrics.get(m), (int, float))})
+        for metric in metric_names:
+            by_series: Dict[str, Dict[int, float]] = {}
+            for point in dataset_points:
+                if metric not in point.metrics:
+                    continue
+                x = point.step
+                if x < 0:
+                    continue
+                series = point.exp_name
+                by_series.setdefault(series, {})
+                prev = by_series[series].get(x)
+                val = float(point.metrics[metric])
+                by_series[series][x] = max(prev, val) if prev is not None else val
 
-        for metric in METRICS:
-            metric_dir = dataset_dir / metric
-            metric_dir.mkdir(parents=True, exist_ok=True)
+            if not by_series:
+                continue
 
             plt.figure(figsize=(7, 4.5))
-            for lr, lr_points in sorted(by_lr.items(), key=lambda item: item[0]):
-                lr_points = sorted(lr_points, key=lambda p: p.epochs)
-                epochs = [p.epochs for p in lr_points]
-                values = [p.metrics.get(metric, 0.0) for p in lr_points]
-                if baseline_point is not None:
-                    epochs = [0] + epochs
-                    values = [baseline_point.metrics.get(metric, 0.0)] + values
-                plt.plot(epochs, values, marker="o", label=f"lr={_format_lr(lr)}")
+            for series_name, xy in sorted(by_series.items(), key=lambda item: item[0]):
+                xs = sorted(xy.keys())
+                ys = [xy[x] for x in xs]
+                plt.plot(xs, ys, marker="o", label=series_name)
 
-            plt.title(f"{metric} vs epochs")
-            plt.xlabel("epochs")
+            plt.title(f"{metric} vs step")
+            plt.xlabel("global step")
             plt.ylabel(metric)
             plt.grid(True, linestyle="--", alpha=0.4)
             plt.legend(loc="best", fontsize=9)
+            steps_label = _steps_per_epoch_label(dataset_points)
+            if steps_label:
+                plt.gca().text(
+                    0.98,
+                    0.02,
+                    steps_label,
+                    transform=plt.gca().transAxes,
+                    ha="right",
+                    va="bottom",
+                    fontsize=8,
+                    alpha=0.7,
+                )
             plt.tight_layout()
 
-            out_path = metric_dir / "all_lrs.png"
+            out_path = dataset_dir / f"{_sanitize_label(metric)}_by_step.png"
             plt.savefig(out_path, dpi=150)
             plt.close()
 
 
-def _plot_metric_all_datasets(points: List[EvalPoint], output_dir: Path) -> None:
-    by_dataset: Dict[str, Dict[int, List[EvalPoint]]] = {}
-    baseline_by_dataset: Dict[str, EvalPoint] = {}
-    for point in points:
-        if point.epochs == 0:
-            baseline_by_dataset[point.dataset] = point
-            continue
-        by_dataset.setdefault(point.dataset, {}).setdefault(point.epochs, []).append(point)
-
+def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
     combined_dir = output_dir / "combined"
     combined_dir.mkdir(parents=True, exist_ok=True)
 
-    for metric in METRICS:
-        plt.figure(figsize=(7, 4.5))
-        for dataset, epochs_map in sorted(by_dataset.items(), key=lambda item: item[0]):
-            epochs = sorted(epochs_map.keys())
-            values = []
-            for ep in epochs:
-                ep_points = epochs_map[ep]
-                values.append(max(p.metrics.get(metric, 0.0) for p in ep_points))
+    metrics = sorted({m for p in points for m in p.metrics.keys()})
+    target_metrics = [m for m in metrics if m == "accuracy" or m.startswith("pass_at_k")]
 
-            baseline = baseline_by_dataset.get(dataset)
-            if baseline is not None:
-                epochs = [0] + epochs
-                values = [baseline.metrics.get(metric, 0.0)] + values
+    by_dataset_metric: Dict[Tuple[str, str], Dict[int, float]] = {}
+    for point in points:
+        x = point.step
+        if x < 0:
+            continue
+        for metric in target_metrics:
+            if metric not in point.metrics:
+                continue
+            key = (point.dataset, metric)
+            by_dataset_metric.setdefault(key, {})
+            prev = by_dataset_metric[key].get(x)
+            val = float(point.metrics[metric])
+            by_dataset_metric[key][x] = max(prev, val) if prev is not None else val
 
-            plt.plot(epochs, values, marker="o", label=dataset)
+    if not by_dataset_metric:
+        return
 
-        plt.title(f"{metric} vs epochs (best across LRs)")
-        plt.xlabel("epochs")
-        plt.ylabel(metric)
-        plt.grid(True, linestyle="--", alpha=0.4)
-        plt.legend(loc="best", fontsize=9)
-        plt.tight_layout()
+    plt.figure(figsize=(9, 6))
+    for (dataset, metric), xy in sorted(by_dataset_metric.items(), key=lambda item: (item[0][0], item[0][1])):
+        xs = sorted(xy.keys())
+        ys = [xy[x] for x in xs]
+        linestyle = "--" if metric.startswith("pass_at_k") else "-"
+        label_metric = metric.replace("pass_at_k", "pass@k")
+        plt.plot(
+            xs,
+            ys,
+            marker="o",
+            linewidth=1.8,
+            markersize=3.2,
+            linestyle=linestyle,
+            label=f"{dataset} | {label_metric}",
+        )
 
-        out_path = combined_dir / f"{metric}_all_datasets.png"
-        plt.savefig(out_path, dpi=150)
-        plt.close()
+    plt.title("accuracy + pass@k across datasets")
+    plt.xlabel("global step")
+    plt.ylabel("score")
+    plt.grid(True, linestyle="--", alpha=0.4)
+    plt.legend(loc="best", fontsize=8)
+    steps_label = _steps_per_epoch_label(points)
+    if steps_label:
+        plt.gca().text(
+            0.98,
+            0.02,
+            steps_label,
+            transform=plt.gca().transAxes,
+            ha="right",
+            va="bottom",
+            fontsize=8,
+            alpha=0.7,
+        )
+    plt.tight_layout()
+
+    out_path = combined_dir / "accuracy_and_passk_all_datasets_by_step.png"
+    plt.savefig(out_path, dpi=150)
+    plt.close()
 
 
 def main() -> None:
@@ -194,7 +307,7 @@ def main() -> None:
     parser.add_argument(
         "--project-dir",
         required=True,
-        help="Path to outputs/<project_name> directory",
+        help="Path to outputs/<project_name> directory or a single experiment dir",
     )
     parser.add_argument(
         "--output-dir",
@@ -215,7 +328,7 @@ def main() -> None:
 
     os.makedirs(output_dir, exist_ok=True)
     _plot_metric(points, output_dir)
-    _plot_metric_all_datasets(points, output_dir)
+    _plot_combined(points, output_dir)
 
     print(f"Wrote plots to: {output_dir}")
 

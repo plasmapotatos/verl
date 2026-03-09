@@ -18,8 +18,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--workers",
         type=int,
-        default=16,
-        help="Number of parallel workers for evaluation (default: 16)",
+        default=32,
+        help="Number of parallel workers for evaluation (default: 32)",
     )
     parser.add_argument("--list-datasets", action="store_true", help="List datasets")
     return parser

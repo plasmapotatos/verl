@@ -178,6 +178,17 @@ class SPINDataParallelPPOActor(DataParallelPPOActor):
             }
             if "rejected_position_ids" in batch_td:
                 micro_batch_rejected_inputs["position_ids"] = batch_td["rejected_position_ids"][start_idx:end_idx]
+            
+            model_type = getattr(getattr(self.actor_module, "config", None), "model_type", "")
+            for batch_inputs in (micro_batch_chosen_inputs, micro_batch_rejected_inputs):
+                if model_type in {"qwen2_vl", "qwen2_5_vl"} and "position_ids" in batch_inputs:
+                    pos = batch_inputs["position_ids"]
+                    if pos.dim() == 2:
+                        base_positions = torch.clamp(batch_inputs["attention_mask"].long().cumsum(-1) - 1, min=0)
+                        pos = base_positions.unsqueeze(1).expand(-1, 3, -1)
+                    if pos.dim() == 3 and pos.shape[1] == 3:
+                        pos = pos.transpose(0, 1).contiguous()
+                    batch_inputs["position_ids"] = pos
 
             # Determine autocast dtype
             autocast_dtype = torch.bfloat16  # Or get dynamically from config/FSDP settings

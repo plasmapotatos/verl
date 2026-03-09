@@ -949,6 +949,8 @@ class RaySPINTrainer:
         else:
             print(f"Warning: No dataloader state found at {dataloader_local_path}, will start from scratch")
 
+        return self.global_steps
+
     def _balance_batch(self, batch: DataProto, metrics, logging_prefix="global_seqlen"):
         """Reorder the data on single controller such that each dp rank gets similar total tokens"""
         attention_mask = batch.batch["attention_mask"]
@@ -1314,6 +1316,7 @@ class RaySPINTrainer:
                                     "use_reference_policy": self.use_reference_policy,
                                     "reference_free": not self.use_reference_policy,  # False if using external ref
                                     "global_step": self.global_steps,
+                                    "global_token_num": batch.meta_info.get("global_token_num", None),
                                 }
 
                                 dpo_update_batch_proto = DataProto.from_dict(tensors=dpo_tensors, meta_info=dpo_meta)

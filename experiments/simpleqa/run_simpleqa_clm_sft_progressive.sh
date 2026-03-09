@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_NAME="simpleqa_clm"
+PROJECT_NAME="simpleqa_clm_progressive"
 
 TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/clm/simpleqa_clm_train.parquet"
 
@@ -18,6 +18,6 @@ CLM_TEXT_KEY="text" \
 CLM_MAX_LEN="4096" \
 CLM_TRUNCATION="right" \
 EXP_PREFIX="clm" \
-EPOCHS_LIST="1 3 6 10 20 30" \
+EPOCHS_LIST="1 3 6 10 20 30 40 50 60 70 80 90 100" \
 LR_LIST="1.5e-4" \
-bash experiments/sft/run_sft_sweep_with_eval.sh
+bash experiments/sft/run_sft_progressive_eval.sh

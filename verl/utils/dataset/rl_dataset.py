@@ -287,7 +287,13 @@ class RLHFDataset(Dataset):
             truncation=self.truncation,
         )
 
-        if self.processor is not None and "Qwen2VLImageProcessor" in self.processor.image_processor.__class__.__name__:
+        if self.processor is not None:
+            image_processor_name = self.processor.image_processor.__class__.__name__
+            is_qwen2_vl = "Qwen2VLImageProcessor" in image_processor_name or "Qwen2_5_VLImageProcessor" in image_processor_name
+        else:
+            is_qwen2_vl = False
+
+        if is_qwen2_vl:
             from verl.models.transformers.qwen2_vl import get_rope_index
 
             position_ids = [

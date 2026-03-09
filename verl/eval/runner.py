@@ -69,7 +69,12 @@ def run(
 
         for predicted in responses:
             try:
-                sample = dataset.get_sample_by_id(sample_id)
+                sample = {
+                    "id": sample_id,
+                    "question": record.get("question", ""),
+                    "answer": record.get("answer", ""),
+                    "metadata": record.get("metadata", {}),
+                }
                 if use_judge and local_judge is not None:
                     prompt = dataset.build_judge_prompt(sample, predicted)
                     raw = local_judge.generate(prompt)

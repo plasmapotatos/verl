@@ -16,6 +16,13 @@ def _default_output_path(input_path: str, fraction: float) -> str:
     return str(base.with_name(base.stem + suffix + base.suffix))
 
 
+def _default_remainder_path(output_path: str, fraction: float) -> str:
+    base = Path(output_path)
+    remainder_frac = 1.0 - fraction
+    suffix = f"_frac{remainder_frac:g}"
+    return str(base.with_name(base.stem + suffix + base.suffix))
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, help="Input parquet path")
@@ -31,6 +38,16 @@ def main() -> None:
         default=0.1,
         help="Fraction of rows to sample (0 < fraction <= 1)",
     )
+    parser.add_argument(
+        "--save-remainder",
+        action="store_true",
+        help="Save the non-eval remainder to a separate parquet file",
+    )
+    parser.add_argument(
+        "--train-output",
+        default=None,
+        help="Output parquet path for remainder (defaults to eval output with _train suffix)",
+    )
     args = parser.parse_args()
 
     if args.fraction <= 0 or args.fraction > 1:
@@ -41,14 +58,25 @@ def main() -> None:
 
     df = pd.read_parquet(input_path)
     sampled = df.sample(frac=args.fraction, random_state=args.seed)
+    remainder = df.drop(sampled.index)
 
     out_dir = os.path.dirname(os.path.abspath(output_path))
     os.makedirs(out_dir, exist_ok=True)
     sampled.to_parquet(output_path, index=False)
 
+    train_output = None
+    if args.save_remainder:
+        train_output = args.train_output or _default_remainder_path(output_path, args.fraction)
+        train_dir = os.path.dirname(os.path.abspath(train_output))
+        os.makedirs(train_dir, exist_ok=True)
+        remainder.to_parquet(train_output, index=False)
+
     print(f"Input rows: {len(df)}")
     print(f"Output rows: {len(sampled)}")
     print(f"Wrote: {output_path}")
+    if train_output:
+        print(f"Remainder rows: {len(remainder)}")
+        print(f"Wrote: {train_output}")
 
 
 if __name__ == "__main__":

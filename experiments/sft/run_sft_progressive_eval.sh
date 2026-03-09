@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+lo#!/usr/bin/env bash
 set -euo pipefail
 
 # make sure we DON'T join some external ray cluster
@@ -48,12 +48,13 @@ export RAY_USAGE_STATS_ENABLED=0
 #   PASS_AT_K_TEMPERATURE (default: 0.8)
 #   PASS_AT_K_DATASET (default: "simpleqa")
 #   PASS_AT_K_EVAL_DATA single parquet for pass@k (required to run pass@k)
+#   POLL_INTERVAL polling interval in seconds (default: 15)
 #
 # Example:
 #   PROJECT_NAME=simpleqa_sft_llm_direct \
 #   TRAIN_DATA=/.../llm_paraphrase_train_direct.parquet \
 #   EVAL_DATA=/.../base/train.parquet \
-#   bash run_sft_sweep_with_eval.sh
+#   bash run_sft_progressive_eval.sh
 # --------------------
 
 # --------------------
@@ -96,6 +97,7 @@ PASS_AT_K_TOP_P="${PASS_AT_K_TOP_P:-0.9}"
 PASS_AT_K_TEMPERATURE="${PASS_AT_K_TEMPERATURE:-0.8}"
 PASS_AT_K_DATASET="${PASS_AT_K_DATASET:-simpleqa}"
 PASS_AT_K_EVAL_DATA="${PASS_AT_K_EVAL_DATA:-}"
+POLL_INTERVAL="${POLL_INTERVAL:-15}"
 
 if [[ -n "${RUN_PASS_AT_K:-}" ]]; then
 	if [[ "$RUN_PASS_AT_K" == "0" ]]; then
@@ -171,6 +173,7 @@ echo "SEED=$SEED"
 echo "HF_AUX_SRC_DIR=$HF_AUX_SRC_DIR"
 echo "RUN_BASE_EVAL=$RUN_BASE_EVAL"
 echo "PASS_AT_K_MODE=$PASS_AT_K_MODE"
+echo "POLL_INTERVAL=$POLL_INTERVAL"
 if [[ "$PASS_AT_K_MODE" != "none" ]]; then
 	echo "PASS_AT_K_TOP_K=$PASS_AT_K_TOP_K"
 	echo "PASS_AT_K_TOP_P=$PASS_AT_K_TOP_P"
@@ -196,6 +199,11 @@ if [[ "$CLM_MODE" != "1" ]]; then
 	echo "FILTER_OVERLONG_PROMPTS=$FILTER_OVERLONG_PROMPTS"
 fi
 
+afail () {
+	echo "ERROR: $1"
+	exit 1
+}
+
 sync_hf_aux_files () {
 	local merged_dir="$1"
 	mkdir -p "$merged_dir"
@@ -218,6 +226,153 @@ pick_last_ckpt () {
 	find "$exp_dir" -maxdepth 2 -type d -name "global_step_*" | sort -V | tail -n 1
 }
 
+get_num_rows_in_parquet () {
+	local parquet_path="$1"
+	python3 - "$parquet_path" <<'PY'
+import sys
+import pyarrow.parquet as pq
+path = sys.argv[1]
+print(pq.ParquetFile(path).metadata.num_rows)
+PY
+}
+
+get_max_epoch () {
+	local max_ep=0
+	for ep in $EPOCHS_LIST; do
+		if (( ep > max_ep )); then
+			max_ep="$ep"
+		fi
+	done
+	echo "$max_ep"
+}
+
+get_steps_per_epoch () {
+	local num_rows
+	num_rows="$(get_num_rows_in_parquet "$TRAIN_DATA")"
+	if [[ -z "$num_rows" ]]; then
+		afail "Failed to determine num_rows for $TRAIN_DATA"
+	fi
+	python3 - "$num_rows" "$TRAIN_BATCH_SIZE" <<'PY'
+import math, sys
+num_rows = int(sys.argv[1])
+batch = int(sys.argv[2])
+print(math.ceil(num_rows / batch))
+PY
+}
+
+build_target_epoch_step_map () {
+	local steps_per_epoch="$1"
+	local out_file="$2"
+	: > "$out_file"
+	for ep in $EPOCHS_LIST; do
+		local target_step=$(( ep * steps_per_epoch ))
+		echo "$ep:$target_step" >> "$out_file"
+	done
+}
+
+ckpt_step_from_dir () {
+	local ckpt_dir="$1"
+	local base
+	base="$(basename "$ckpt_dir")"
+	echo "${base#global_step_}"
+}
+
+update_candidate_checkpoints () {
+	local exp_dir="$1"
+	local target_map_file="$2"
+	local candidates_file="$3"
+
+	declare -A candidates=()
+	if [[ -f "$candidates_file" ]]; then
+		while IFS=: read -r step dir; do
+			[[ -n "$step" && -n "$dir" ]] || continue
+			candidates["$step"]="$dir"
+		done < "$candidates_file"
+	fi
+
+	mapfile -t target_steps < <(awk -F: '{print $2}' "$target_map_file")
+	mapfile -t sorted_ckpts < <(printf '%s\n' "$exp_dir"/global_step_* 2>/dev/null | sort -V)
+
+	if [[ ${#sorted_ckpts[@]} -eq 0 ]]; then
+		return
+	fi
+
+	for target_step in "${target_steps[@]}"; do
+		[[ -n "$target_step" ]] || continue
+		if [[ -n "${candidates[$target_step]:-}" ]]; then
+			continue
+		fi
+		for ckpt_dir in "${sorted_ckpts[@]}"; do
+			local step
+			step="$(ckpt_step_from_dir "$ckpt_dir")"
+			if [[ "$step" =~ ^[0-9]+$ ]] && (( step >= target_step )); then
+				candidates["$target_step"]="$ckpt_dir"
+				break
+			fi
+		done
+	done
+
+	: > "$candidates_file"
+	for target_step in "${target_steps[@]}"; do
+		if [[ -n "${candidates[$target_step]:-}" ]]; then
+			echo "$target_step:${candidates[$target_step]}" >> "$candidates_file"
+		fi
+	done
+
+	local latest_ckpt
+	latest_ckpt="${sorted_ckpts[-1]}"
+	for ckpt_dir in "${sorted_ckpts[@]}"; do
+		local keep=0
+		if [[ "$ckpt_dir" == "$latest_ckpt" ]]; then
+			keep=1
+		else
+			for target_step in "${target_steps[@]}"; do
+				if [[ "$ckpt_dir" == "${candidates[$target_step]:-}" ]]; then
+					keep=1
+					break
+				fi
+			done
+		fi
+		if [[ "$keep" -eq 0 ]]; then
+			echo "Pruning checkpoint (non-eval): $ckpt_dir"
+			rm -rf "$ckpt_dir"
+		fi
+	done
+}
+
+prune_checkpoints () {
+	local exp_dir="$1"
+	local keep_file="$2"
+	local max_step="$3"
+
+	if [[ ! -f "$keep_file" ]]; then
+		return
+	fi
+
+	mapfile -t keep_dirs < "$keep_file"
+	for ckpt_dir in "$exp_dir"/global_step_*; do
+		[[ -d "$ckpt_dir" ]] || continue
+		local base
+		base="$(basename "$ckpt_dir")"
+		local step
+		step="${base#global_step_}"
+		if [[ "$step" =~ ^[0-9]+$ ]] && (( step > max_step )); then
+			continue
+		fi
+		local keep=0
+		for keep_dir in "${keep_dirs[@]}"; do
+			if [[ "$ckpt_dir" == "$keep_dir" ]]; then
+				keep=1
+				break
+			fi
+		done
+		if [[ "$keep" -eq 0 ]]; then
+			echo "Pruning checkpoint: $ckpt_dir"
+			rm -rf "$ckpt_dir"
+		fi
+	done
+}
+
 run_pass_at_k () {
 	local exp_name="$1"
 	local exp_dir="$2"
@@ -225,8 +380,7 @@ run_pass_at_k () {
 		return
 	fi
 	if [[ "$PASS_AT_K_MODE" != "last" && "$PASS_AT_K_MODE" != "all" ]]; then
-		echo "ERROR: PASS_AT_K_MODE must be one of: none|last|all"
-		exit 1
+		afail "PASS_AT_K_MODE must be one of: none|last|all"
 	fi
 	local eval_data="$PASS_AT_K_EVAL_DATA"
 	if [[ -z "$eval_data" ]]; then
@@ -290,54 +444,6 @@ run_pass_at_k () {
 	done
 }
 
-run_train () {
-	local exp_name="$1"
-	local epochs="$2"
-	local out_dir="$ROOT/$exp_name"
-	mkdir -p "$out_dir"
-
-	echo ""
-	echo "=============================="
-	echo "TRAIN: $exp_name (epochs=$epochs, lr=$LR)"
-	echo "OUT: $out_dir"
-	echo "DATA: $TRAIN_DATA"
-	echo "=============================="
-
-	torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC" \
-		-m verl.trainer.fsdp_sft_trainer \
-		data.train_batch_size="$TRAIN_BATCH_SIZE" \
-		data.train_files="$TRAIN_DATA" \
-		data.val_files="$TRAIN_DATA" \
-		optim.lr="$LR" \
-		data.micro_batch_size=4 \
-		model.partial_pretrain=Qwen/Qwen2.5-VL-3B-Instruct \
-		trainer.default_local_dir="$out_dir" \
-		trainer.project_name="$PROJECT_NAME" \
-		trainer.experiment_name="$exp_name" \
-		trainer.logger=[console,wandb] \
-		trainer.total_epochs="$epochs" \
-		trainer.resume_mode=auto \
-		trainer.save_freq=100 \
-		trainer.seed="$SEED" \
-		model.fsdp_config.model_dtype="$MODEL_DTYPE" \
-		ulysses_sequence_parallel_size=1 \
-		use_remove_padding=true \
-		$(
-			if [[ "$CLM_MODE" == "1" ]]; then
-				echo "data.text_key=$CLM_TEXT_KEY data.max_length=$CLM_MAX_LEN data.truncation=$CLM_TRUNCATION"
-			else
-				args="data.prompt_key=$PROMPT_KEY data.response_key=$RESPONSE_KEY data.max_length=$MAX_LENGTH data.truncation=$TRUNCATION +data.filter_overlong_prompts=$FILTER_OVERLONG_PROMPTS"
-				if [[ -n "$PROMPT_DICT_KEYS" ]]; then
-					args+=" data.prompt_dict_keys=['$PROMPT_DICT_KEYS']"
-				fi
-				if [[ -n "$RESPONSE_DICT_KEYS" ]]; then
-					args+=" +data.response_dict_keys=['$RESPONSE_DICT_KEYS']"
-				fi
-				echo "$args"
-			fi
-		)
-}
-
 run_generation () {
 	local tag="$1" # "train" or "eval"
 	local data_path="$2"
@@ -366,60 +472,6 @@ run_generation () {
 		rollout.gpu_memory_utilization="$GPU_MEM_UTIL"
 
 	echo "Wrote $out_path"
-}
-
-run_base_eval () {
-	if [[ -z "$EVAL_DATA" ]]; then
-		echo "Skipping base eval (EVAL_DATA not provided)"
-		return
-	fi
-	if [[ "$RUN_BASE_EVAL" != "1" ]]; then
-		echo "Skipping base eval (RUN_BASE_EVAL=$RUN_BASE_EVAL)"
-		return
-	fi
-
-	local base_dir="$ROOT/base"
-	local gen_out_dir="$base_dir/generations"
-	mkdir -p "$gen_out_dir"
-
-	for eval_path in $EVAL_DATA; do
-		local eval_tag
-		eval_tag="eval_$(basename "${eval_path%.parquet}")"
-		local gen_out_eval="$gen_out_dir/base_global_step_0__on_${eval_tag}.parquet"
-		if [[ -f "$gen_out_eval" ]]; then
-			echo "Base generation already exists: $gen_out_eval (skipping)"
-		else
-			echo "Base generation (Qwen) -> $gen_out_eval"
-			python3 -m verl.trainer.main_generation \
-				trainer.nnodes=1 \
-				trainer.n_gpus_per_node="$NGPU_GEN" \
-				data.path="$eval_path" \
-				data.prompt_key=prompt \
-				data.n_samples="$N_SAMPLES" \
-				data.output_path="$gen_out_eval" \
-				model.path=Qwen/Qwen2.5-VL-3B-Instruct \
-				+model.trust_remote_code=True \
-				rollout.temperature="$TEMP" \
-				rollout.prompt_length="$PROMPT_LEN" \
-				rollout.response_length="$RESP_LEN" \
-				rollout.tensor_model_parallel_size="$TP_SIZE" \
-				rollout.gpu_memory_utilization="$GPU_MEM_UTIL"
-		fi
-		run_grade "$gen_out_eval"
-	done
-
-	if [[ "$PASS_AT_K_MODE" != "none" && -n "$PASS_AT_K_EVAL_DATA" ]]; then
-		echo "Running pass@k for base model"
-		python3 "$VERL_DIR/scripts/pass_at_k.py" \
-			--checkpoint Qwen/Qwen2.5-VL-3B-Instruct \
-			--dataset "$PASS_AT_K_DATASET" \
-			--eval-data "$PASS_AT_K_EVAL_DATA" \
-			--output-dir "$base_dir" \
-			--top-k "$PASS_AT_K_TOP_K" \
-			--top-p "$PASS_AT_K_TOP_P" \
-			--temperature "$PASS_AT_K_TEMPERATURE" \
-			--use-judge
-	fi
 }
 
 run_grade () {
@@ -480,36 +532,266 @@ run_eval_for_ckpt () {
 	fi
 }
 
-run_one () {
-	local epochs="$1"
-	local exp_name="${EXP_PREFIX}_lr${LR}_ep${epochs}_seed${SEED}"
-
-	run_train "$exp_name" "$epochs"
-
-	local exp_dir="$ROOT/$exp_name"
-	local ckpt_dir
-	ckpt_dir="$(pick_last_ckpt "$exp_dir")"
-
-	if [[ -z "${ckpt_dir:-}" || ! -d "$ckpt_dir" ]]; then
-		echo "ERROR: No global_step_* found under $exp_dir"
-		exit 1
+run_base_eval () {
+	if [[ -z "$EVAL_DATA" ]]; then
+		echo "Skipping base eval (EVAL_DATA not provided)"
+		return
+	fi
+	if [[ "$RUN_BASE_EVAL" != "1" ]]; then
+		echo "Skipping base eval (RUN_BASE_EVAL=$RUN_BASE_EVAL)"
+		return
 	fi
 
-	run_eval_for_ckpt "$exp_name" "$ckpt_dir"
-	run_pass_at_k "$exp_name" "$exp_dir"
+	local base_dir="$ROOT/base"
+	local gen_out_dir="$base_dir/generations"
+	mkdir -p "$gen_out_dir"
+
+	for eval_path in $EVAL_DATA; do
+		local eval_tag
+		eval_tag="eval_$(basename "${eval_path%.parquet}")"
+		local gen_out_eval="$gen_out_dir/base_global_step_0__on_${eval_tag}.parquet"
+		if [[ -f "$gen_out_eval" ]]; then
+			echo "Base generation already exists: $gen_out_eval (skipping)"
+		else
+			echo "Base generation (Qwen) -> $gen_out_eval"
+			python3 -m verl.trainer.main_generation \
+				trainer.nnodes=1 \
+				trainer.n_gpus_per_node="$NGPU_GEN" \
+				data.path="$eval_path" \
+				data.prompt_key=prompt \
+				data.n_samples="$N_SAMPLES" \
+				data.output_path="$gen_out_eval" \
+				model.path=Qwen/Qwen2.5-VL-3B-Instruct \
+				+model.trust_remote_code=True \
+				rollout.temperature="$TEMP" \
+				rollout.prompt_length="$PROMPT_LEN" \
+				rollout.response_length="$RESP_LEN" \
+				rollout.tensor_model_parallel_size="$TP_SIZE" \
+				rollout.gpu_memory_utilization="$GPU_MEM_UTIL"
+		fi
+		run_grade "$gen_out_eval"
+	done
+
+	if [[ "$PASS_AT_K_MODE" != "none" && -n "$PASS_AT_K_EVAL_DATA" ]]; then
+		echo "Running pass@k for base model"
+		python3 "$VERL_DIR/scripts/pass_at_k.py" \
+			--checkpoint Qwen/Qwen2.5-VL-3B-Instruct \
+			--dataset "$PASS_AT_K_DATASET" \
+			--eval-data "$PASS_AT_K_EVAL_DATA" \
+			--output-dir "$base_dir" \
+			--top-k "$PASS_AT_K_TOP_K" \
+			--top-p "$PASS_AT_K_TOP_P" \
+			--temperature "$PASS_AT_K_TEMPERATURE" \
+			--use-judge
+	fi
 }
 
+launch_train_background () {
+	local exp_name="$1"
+	local max_epoch="$2"
+	local out_dir="$ROOT/$exp_name"
+	mkdir -p "$out_dir"
+
+	echo ""
+	echo "=============================="
+	echo "TRAIN (progressive): $exp_name (epochs=$max_epoch, lr=$LR)"
+	echo "OUT: $out_dir"
+	echo "DATA: $TRAIN_DATA"
+	echo "=============================="
+
+	# shellcheck disable=SC2086
+	torchrun --standalone --nnodes=1 --nproc_per_node="$NPROC" \
+		-m verl.trainer.fsdp_sft_trainer \
+		data.train_batch_size="$TRAIN_BATCH_SIZE" \
+		data.train_files="$TRAIN_DATA" \
+		data.val_files="$TRAIN_DATA" \
+		optim.lr="$LR" \
+		data.micro_batch_size=4 \
+		model.partial_pretrain=Qwen/Qwen2.5-VL-3B-Instruct \
+		trainer.default_local_dir="$out_dir" \
+		trainer.project_name="$PROJECT_NAME" \
+		trainer.experiment_name="$exp_name" \
+		trainer.logger=[console,wandb] \
+		trainer.total_epochs="$max_epoch" \
+		trainer.resume_mode=auto \
+		trainer.save_freq=100 \
+		trainer.seed="$SEED" \
+		model.fsdp_config.model_dtype="$MODEL_DTYPE" \
+		ulysses_sequence_parallel_size=1 \
+		use_remove_padding=true \
+		$(
+			if [[ "$CLM_MODE" == "1" ]]; then
+				echo "data.text_key=$CLM_TEXT_KEY data.max_length=$CLM_MAX_LEN data.truncation=$CLM_TRUNCATION"
+			else
+				args="data.prompt_key=$PROMPT_KEY data.response_key=$RESPONSE_KEY data.max_length=$MAX_LENGTH data.truncation=$TRUNCATION +data.filter_overlong_prompts=$FILTER_OVERLONG_PROMPTS"
+				if [[ -n "$PROMPT_DICT_KEYS" ]]; then
+					args+=" data.prompt_dict_keys=['$PROMPT_DICT_KEYS']"
+				fi
+				if [[ -n "$RESPONSE_DICT_KEYS" ]]; then
+					args+=" +data.response_dict_keys=['$RESPONSE_DICT_KEYS']"
+				fi
+				echo "$args"
+			fi
+		) &
+
+	echo $! > "$out_dir/train.pid"
+}
+
+refresh_plots () {
+	if [[ -n "$EVAL_DATA" ]]; then
+		echo "Refreshing eval metrics -> $ROOT/plots"
+		python3 "$VERL_DIR/scripts/plot_sft_eval_metrics.py" \
+			--project-dir "$ROOT" \
+			--output-dir "$ROOT/plots"
+	fi
+}
+
+maybe_eval_target_epoch () {
+	local exp_name="$1"
+	local exp_dir="$2"
+	local target_ep="$3"
+	local target_step="$4"
+	local processed_steps_file="$5"
+	local evaled_epochs_file="$6"
+	local evaled_ckpts_file="$7"
+
+	# If this epoch already evaluated, skip
+	if grep -qx "${target_ep}" "$evaled_epochs_file" 2>/dev/null; then
+		return
+	fi
+
+	# Mode A: exact epoch-step matching
+	local exact_dir="$exp_dir/global_step_${target_step}"
+	if [[ -d "$exact_dir" ]]; then
+		if ! grep -qx "${exact_dir}" "$processed_steps_file" 2>/dev/null; then
+			echo "Exact match for epoch $target_ep -> $exact_dir"
+			run_eval_for_ckpt "$exp_name" "$exact_dir"
+			echo "$exact_dir" >> "$processed_steps_file"
+			echo "$target_ep" >> "$evaled_epochs_file"
+			echo "$exact_dir" >> "$evaled_ckpts_file"
+			run_pass_at_k "$exp_name" "$exp_dir"
+			refresh_plots
+			prune_checkpoints "$exp_dir" "$evaled_ckpts_file" "$target_step"
+		fi
+		return
+	fi
+
+	# Mode B: nearest checkpoint fallback
+	# Find the first checkpoint with step >= target_step
+	local candidate_dir=""
+	local ckpt_dirs
+	ckpt_dirs=("$exp_dir"/global_step_*)
+	if [[ ${#ckpt_dirs[@]} -gt 0 ]]; then
+		local sorted_ckpts
+		sorted_ckpts=( $(printf '%s\n' "${ckpt_dirs[@]}" | sort -V) )
+		for ckpt_dir in "${sorted_ckpts[@]}"; do
+			local step
+			step="${ckpt_dir##*/}"
+			step="${step#global_step_}"
+			if [[ "$step" =~ ^[0-9]+$ ]] && (( step >= target_step )); then
+				candidate_dir="$ckpt_dir"
+				break
+			fi
+		done
+	fi
+
+	if [[ -n "$candidate_dir" ]]; then
+		if ! grep -qx "${candidate_dir}" "$processed_steps_file" 2>/dev/null; then
+			echo "Fallback match for epoch $target_ep -> $candidate_dir"
+			run_eval_for_ckpt "$exp_name" "$candidate_dir"
+			echo "$candidate_dir" >> "$processed_steps_file"
+			echo "$target_ep" >> "$evaled_epochs_file"
+			echo "$candidate_dir" >> "$evaled_ckpts_file"
+			run_pass_at_k "$exp_name" "$exp_dir"
+			refresh_plots
+			local candidate_step
+			candidate_step="${candidate_dir##*/}"
+			candidate_step="${candidate_step#global_step_}"
+			if [[ "$candidate_step" =~ ^[0-9]+$ ]]; then
+				prune_checkpoints "$exp_dir" "$evaled_ckpts_file" "$candidate_step"
+			else
+				prune_checkpoints "$exp_dir" "$evaled_ckpts_file" "$target_step"
+			fi
+		fi
+	fi
+}
+
+monitor_and_eval_checkpoints () {
+	local exp_name="$1"
+	local exp_dir="$2"
+	local target_map_file="$3"
+	local candidates_file="$4"
+	local train_pid="$5"
+
+	# Poll until training finishes
+	while kill -0 "$train_pid" 2>/dev/null; do
+		update_candidate_checkpoints "$exp_dir" "$target_map_file" "$candidates_file"
+		sleep "$POLL_INTERVAL"
+	done
+}
+
+run_progressive_lr () {
+	local max_epoch
+	max_epoch="$(get_max_epoch)"
+	if [[ -z "$max_epoch" || "$max_epoch" == "0" ]]; then
+		afail "Failed to compute max epoch from EPOCHS_LIST"
+	fi
+
+	local steps_per_epoch
+	steps_per_epoch="$(get_steps_per_epoch)"
+	if [[ -z "$steps_per_epoch" || "$steps_per_epoch" == "0" ]]; then
+		afail "Failed to compute steps per epoch"
+	fi
+
+	local exp_name="${EXP_PREFIX}_lr${LR}_epmax${max_epoch}_seed${SEED}"
+	local exp_dir="$ROOT/$exp_name"
+	mkdir -p "$exp_dir"
+
+	local target_map_file="$exp_dir/target_epoch_step_map.txt"
+	local processed_steps_file="$exp_dir/processed_checkpoints.txt"
+	local evaled_epochs_file="$exp_dir/evaluated_epochs.txt"
+	local evaled_ckpts_file="$exp_dir/evaluated_checkpoints.txt"
+	local candidates_file="$exp_dir/eval_candidates.txt"
+
+	build_target_epoch_step_map "$steps_per_epoch" "$target_map_file"
+	: > "$processed_steps_file"
+	: > "$evaled_epochs_file"
+	: > "$evaled_ckpts_file"
+	: > "$candidates_file"
+
+	echo "Target epochs -> steps (steps_per_epoch=$steps_per_epoch):"
+	cat "$target_map_file"
+
+	launch_train_background "$exp_name" "$max_epoch"
+	local train_pid
+	train_pid="$(cat "$exp_dir/train.pid")"
+
+	monitor_and_eval_checkpoints "$exp_name" "$exp_dir" "$target_map_file" \
+		"$candidates_file" "$train_pid"
+
+	# Wait for training to fully finish
+	wait "$train_pid"
+
+	# Final pass in case last checkpoint appeared near the end
+	while IFS=: read -r ep target_step; do
+		maybe_eval_target_epoch "$exp_name" "$exp_dir" "$ep" "$target_step" \
+			"$processed_steps_file" "$evaled_epochs_file" "$evaled_ckpts_file"
+	done < "$target_map_file"
+}
+
+
+
 echo ""
-echo "==== SFT SWEEP + EVAL (project=$PROJECT_NAME) ===="
+echo "==== SFT PROGRESSIVE EVAL (project=$PROJECT_NAME) ===="
 
 run_base_eval
 
 for lr in $LR_LIST; do
 	LR="$lr"
-	for ep in $EPOCHS_LIST; do
-		run_one "$ep"
-	done
+	run_progressive_lr
+
 done
+
 
 echo ""
 echo "DONE."

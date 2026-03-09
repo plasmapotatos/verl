@@ -44,7 +44,23 @@ def json_safe(obj: Any) -> Any:
 def _coerce_list(value: Any) -> list[str]:
     if value is None:
         return []
-    if isinstance(value, list):
+    try:
+        import numpy as np  # type: ignore
+
+        if isinstance(value, np.ndarray):
+            value = value.tolist()
+    except Exception:
+        pass
+
+    try:
+        import pandas as pd  # type: ignore
+
+        if isinstance(value, pd.Series):
+            value = value.tolist()
+    except Exception:
+        pass
+
+    if isinstance(value, (list, tuple)):
         results: list[str] = []
         for item in value:
             if item is None:

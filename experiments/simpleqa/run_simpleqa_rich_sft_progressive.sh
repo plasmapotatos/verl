@@ -1,8 +1,7 @@
-
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_NAME="simpleqa_rich_sft"
+PROJECT_NAME="simpleqa_rich_sft_progressive"
 
 TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/rich_sft/simpleqa_rich_sft_train.parquet"
 
@@ -21,5 +20,5 @@ RESPONSE_DICT_KEYS="" \
 MAX_LENGTH="4096" \
 FILTER_OVERLONG_PROMPTS="1" \
 LR_LIST="1.5e-4" \
-EPOCHS_LIST="1 3 6 10 20 30 40 50" \
-bash experiments/sft/run_sft_sweep_with_eval.sh
+EPOCHS_LIST="1 3 6 10 20 30 40 50 60 70 80 90 100" \
+bash experiments/sft/run_sft_progressive_eval.sh

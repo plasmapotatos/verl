@@ -273,7 +273,8 @@ class SPINRolloutRefWorker(ActorRolloutRefWorker):
             metrics["perf/cpu_memory_used_gb"] = psutil.virtual_memory().used / (1024**3)
             global_num_tokens = data.meta_info["global_token_num"]
             estimated_flops, promised_flops = self.flops_counter.estimate_flops(global_num_tokens, delta_time)
-            metrics["perf/mfu/actor"] = estimated_flops * self.config.ppo_epochs / promised_flops / self.world_size
+            ppo_epochs = getattr(self.config.actor, "ppo_epochs", 1)
+            metrics["perf/mfu/actor"] = estimated_flops * ppo_epochs / promised_flops / self.world_size
 
             # --- LR Scheduler Step ---
             lr = self.actor_lr_scheduler.get_last_lr()[0]
