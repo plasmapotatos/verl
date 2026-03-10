@@ -93,6 +93,10 @@ def default_compute_score(
         from . import scienceqa
 
         res = scienceqa.compute_score(solution_str, ground_truth)
+    elif data_source == "simpleqa":
+        from . import simpleqa
+
+        res = simpleqa.compute_score(solution_str, ground_truth)
     elif data_source in [
         "searchR1_nq",
         "searchR1_triviaqa",

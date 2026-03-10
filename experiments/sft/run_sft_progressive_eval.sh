@@ -494,39 +494,15 @@ run_grade () {
 run_eval_for_ckpt () {
 	local exp_name="$1"
 	local ckpt_dir="$2"
-	local gen_out_dir="$ckpt_dir/generations"
-	mkdir -p "$gen_out_dir"
-	local step
-	step="$(basename "$ckpt_dir")"
-	local merged_dir="$ckpt_dir/merged_hf_model"
 
 	echo ""
 	echo "--- MERGE/EVAL: $exp_name @ $ckpt_dir"
 
-	# 1) Merge FSDP -> HF (skip if already merged)
-	if [[ -d "$merged_dir" ]]; then
-		echo "Merged model already exists: $merged_dir (skipping merge)"
-	else
-		echo "Merging -> $merged_dir"
-		python3 -m verl.model_merger merge \
-			--backend fsdp \
-			--local_dir "$ckpt_dir" \
-			--target_dir "$merged_dir"
-	fi
+	export EXPERIMENT_NAME="$exp_name"
+	bash "$VERL_DIR/experiments/utils/merge_checkpoint.sh" "$ckpt_dir"
 
-	# 1.5) Ensure aux HF files are present in merged dir
-	echo "Syncing HF aux files into: $merged_dir"
-	sync_hf_aux_files "$merged_dir"
-
-	# 2) Generation on EVAL_DATA (optional)
 	if [[ -n "$EVAL_DATA" ]]; then
-		for eval_path in $EVAL_DATA; do
-			local eval_tag
-			eval_tag="eval_$(basename "${eval_path%.parquet}")"
-			local gen_out_eval="$gen_out_dir/${exp_name}_${step}__on_${eval_tag}.parquet"
-			run_generation "eval" "$eval_path" "$merged_dir" "$gen_out_eval"
-			run_grade "$gen_out_eval"
-		done
+		bash "$VERL_DIR/experiments/utils/eval_all_checkpoints.sh" "$ROOT/$exp_name" "$EVAL_DATA" "$ckpt_dir" "$NGPU_GEN" "$PROMPT_LEN" "$RESP_LEN"
 	else
 		echo "Skipping eval generation/grade (EVAL_DATA not provided)"
 	fi

@@ -1,9 +1,21 @@
+# Copyright 2024 Bytedance Ltd. and/or its affiliates
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 """Simple reward function for SimpleQA DPO/SPIN training."""
 
 import re
 import string
 
-from verl.utils.reward_score import default_compute_score
 
 _NOT_ATTEMPTED_PATTERNS = (
     "not_attempted",
@@ -66,17 +78,7 @@ def _simpleqa_rule_grade(predicted_answer: str, ground_truth: str) -> float:
     return 0.0
 
 
-def compute_score(data_source, solution_str, ground_truth, extra_info=None, **kwargs):
-    """Custom reward function entrypoint used by VERL."""
-    if str(data_source) == "simpleqa":
-        answer = _extract_answer(solution_str)
-        return _simpleqa_rule_grade(answer, str(ground_truth))
-
-    # Fallback so this function stays usable with mixed datasets.
-    return default_compute_score(
-        data_source=data_source,
-        solution_str=solution_str,
-        ground_truth=ground_truth,
-        extra_info=extra_info,
-        **kwargs,
-    )
+def compute_score(solution_str: str, ground_truth: str) -> float:
+    """Compute the score for SimpleQA."""
+    answer = _extract_answer(solution_str)
+    return _simpleqa_rule_grade(answer, str(ground_truth))
