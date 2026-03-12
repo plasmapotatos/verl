@@ -21,6 +21,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--write_per_method", action="store_true", help="Write per-method outputs")
     parser.add_argument("--mix_original", action="store_true", help="Include original samples")
     parser.add_argument("--max_samples", type=int, help="Max samples for debugging")
+    parser.add_argument(
+        "--batch_size",
+        type=int,
+        default=32,
+        help="Number of samples to process concurrently",
+    )
     parser.add_argument("--list_methods", action="store_true", help="List methods and exit")
     return parser
 
@@ -54,6 +60,7 @@ def main(argv: list[str] | None = None) -> int:
         mix_original=args.mix_original,
         mode=args.mode,
         max_samples=args.max_samples,
+        batch_size=args.batch_size,
     )
     return 0
 

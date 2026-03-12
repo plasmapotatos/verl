@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_NAME="simpleqa_rich_sft_grpo_train_eval"
-EXPERIMENT_NAME="simpleqa_rich_sft_grpo_train_eval"
+EXPERIMENT_NAME="simpleqa_rich_sft_grpo_train_eval_clean_grpo"
 
 MODEL_PATH="/work/hdd/bbsg/twei2/rl/verl/outputs/simpleqa_rich_sft/sft_lr1.5e-4_ep10_seed1/global_step_370/merged_hf_model"
 TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/rich_sft/simpleqa_rich_sft_train_origqa_frac0.9_train.parquet"
@@ -14,8 +14,8 @@ MODEL_PATH="$MODEL_PATH" \
 TRAIN_DATA="$TRAIN_DATA" \
 VAL_DATA="$TRAIN_DATA" \
 EVAL_DATA="$EVAL_DATA" \
-TOTAL_EPOCHS=40 \
+TOTAL_EPOCHS=4 \
 SAVE_FREQ=100 \
 RUN_EVAL=1 \
-SKIP_TRAIN=0 \
+SKIP_TRAIN=1 \
 bash /work/hdd/bbsg/twei2/rl/verl/experiments/rl/grpo.sh

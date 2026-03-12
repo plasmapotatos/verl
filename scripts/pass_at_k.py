@@ -121,8 +121,8 @@ def main() -> None:
     parser.add_argument("--eval-data", required=True, help="Eval parquet path")
     parser.add_argument("--output-dir", required=True, help="Output directory for pass@k artifacts")
     parser.add_argument("--top-k", type=int, required=True, help="Number of samples per prompt (k)")
-    parser.add_argument("--top-p", type=float, default=0.7, help="Top-p sampling")
-    parser.add_argument("--temperature", type=float, default=1.0, help="Sampling temperature")
+    parser.add_argument("--top-p", type=float, default=0.9, help="Top-p sampling")
+    parser.add_argument("--temperature", type=float, default=1, help="Sampling temperature")
     parser.add_argument("--prompt-len", type=int, default=2048, help="Prompt length")
     parser.add_argument("--resp-len", type=int, default=1024, help="Response length")
     parser.add_argument("--n-gpus", type=int, default=1, help="GPUs for generation")
@@ -130,7 +130,7 @@ def main() -> None:
     parser.add_argument("--gpu-mem-util", type=float, default=0.8, help="GPU memory utilization")
     parser.add_argument("--cache-dir", default=None, help="Dataset cache directory")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of rows")
-    parser.add_argument("--use-judge", action="store_true", help="Use OpenAI judge")
+    parser.add_argument("--use-judge", default=True, action="store_true", help="Use OpenAI judge")
     parser.add_argument("--workers", type=int, default=32, help="Parallel workers for eval")
     parser.add_argument(
         "--no-merge",

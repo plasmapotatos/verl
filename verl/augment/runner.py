@@ -5,9 +5,9 @@ from __future__ import annotations
 import hashlib
 import os
 from copy import deepcopy
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, List, Optional
 
-from datasets import Dataset
+from concurrent.futures import ThreadPoolExecutor, as_completed, Future
 from tqdm import tqdm
 
 from .io import read_parquet, write_parquet
@@ -32,7 +32,10 @@ def run(
     mix_original: bool,
     mode: Optional[str] = None,
     max_samples: Optional[int] = None,
+    batch_size: int = 16,
 ) -> None:
+    if batch_size < 1:
+        raise ValueError("batch_size must be >= 1")
     dataset = read_parquet(input_path)
     if max_samples is not None:
         dataset = dataset.select(range(min(max_samples, len(dataset))))
@@ -46,17 +49,20 @@ def run(
         rewriter_kwargs = {"mode": mode} if mode is not None else {}
         rewriters[method] = get_rewriter(method, **rewriter_kwargs)
 
-    for idx, sample in enumerate(tqdm(samples, desc="Augmenting samples")):
+    def _process_sample(idx: int, sample: dict) -> tuple[List[dict], Dict[str, List[dict]]]:
         sample_id = None
         extra_info = sample.get("extra_info")
         if isinstance(extra_info, dict):
             sample_id = extra_info.get("sample_id")
         if sample_id is None:
             sample_id = str(idx)
+
+        sample_outputs: List[dict] = []
+        sample_per_method: Dict[str, List[dict]] = {m: [] for m in methods}
         if mix_original:
-            outputs.append(deepcopy(sample))
+            sample_outputs.append(deepcopy(sample))
             for m in methods:
-                per_method_outputs[m].append(deepcopy(sample))
+                sample_per_method[m].append(deepcopy(sample))
 
         for method in methods:
             rewriter = rewriters[method]
@@ -73,8 +79,34 @@ def run(
                             params={},
                             seed=derived_seed,
                         )
-                    outputs.append(out)
-                    per_method_outputs[method].append(out)
+                    sample_outputs.append(out)
+                    sample_per_method[method].append(out)
+        return sample_outputs, sample_per_method
+
+    ResultType = tuple[List[dict], Dict[str, List[dict]]]
+    results: List[Optional[ResultType]] = [None] * len(samples)
+    if batch_size <= 1:
+        for idx, sample in enumerate(tqdm(samples, desc="Augmenting samples")):
+            results[idx] = _process_sample(idx, sample)
+    else:
+        future_to_idx: Dict[Future[ResultType], int] = {}
+        with ThreadPoolExecutor(max_workers=batch_size) as executor:
+            for idx, sample in enumerate(samples):
+                future = executor.submit(_process_sample, idx, sample)
+                future_to_idx[future] = idx
+            with tqdm(total=len(samples), desc="Augmenting samples") as progress:
+                for future in as_completed(future_to_idx):
+                    idx = future_to_idx[future]
+                    results[idx] = future.result()
+                    progress.update(1)
+
+    for idx, entry in enumerate(results):
+        if entry is None:
+            raise RuntimeError(f"Missing batch result for sample {idx}")
+        sample_outputs, sample_per_method = entry
+        outputs.extend(sample_outputs)
+        for method, items in sample_per_method.items():
+            per_method_outputs[method].extend(items)
 
     def _write_metrics(metrics: Dict[str, Dict[str, int]], path: str) -> None:
         with open(path, "w", encoding="utf-8") as handle:
