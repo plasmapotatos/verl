@@ -42,7 +42,7 @@ def main() -> None:
     parser.add_argument("--input", required=True, help="Input augmented parquet path")
     parser.add_argument(
         "--base-parquet",
-        default="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/base/train.parquet",
+        default="data/simpleqa/data.parquet",
         help="Base parquet with original id/question/answer/prompt/reward_model",
     )
     parser.add_argument(

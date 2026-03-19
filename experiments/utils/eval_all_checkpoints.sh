@@ -31,18 +31,17 @@ fi
 for CKPT_DIR in $CKPT_DIRS; do
     STEP_NAME=$(basename "$CKPT_DIR")
     
-    # Skip non-global_step_0 checkpoints if actor folder doesn't exist (incomplete checkpoint)
-    if [[ "$STEP_NAME" != "global_step_0" && ! -d "$CKPT_DIR/actor" ]]; then
-        echo "Actor folder not found for $STEP_NAME, skipping."
-        continue
-    fi
-    
     if [[ "$STEP_NAME" == "global_step_0" ]]; then
         MERGED_DIR="$MODEL_PATH"
     else
         MERGED_DIR="$CKPT_DIR/merged_hf_model"
         if [[ ! -d "$MERGED_DIR" ]]; then
+            echo "merged_hf_model not found for $STEP_NAME, attempting merge."
             bash /work/hdd/bbsg/twei2/rl/verl/experiments/utils/merge_checkpoint.sh "$CKPT_DIR"
+        fi
+        if [[ ! -d "$MERGED_DIR" ]]; then
+            echo "merged_hf_model still missing for $STEP_NAME, skipping."
+            continue
         fi
     fi
 

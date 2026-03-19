@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import math
 import os
 import re
 from dataclasses import dataclass
@@ -37,7 +38,11 @@ def _parse_lr_ep(exp_name: str) -> Optional[Tuple[float, int]]:
 
 def _parse_step(text: str) -> int:
     match = re.search(r"global_step_(\d+)", text)
-    return int(match.group(1)) if match else -1
+    if match:
+        return int(match.group(1))
+    if "/base/" in text or text.endswith("/base") or "/base/pass@k/" in text:
+        return 0
+    return -1
 
 
 def _parse_dataset_label(filename: str) -> str:
@@ -86,6 +91,19 @@ def _iter_generation_dirs(exp_dir: Path) -> List[Path]:
     return sorted(p for p in exp_dir.glob("global_step_*/generations") if p.is_dir())
 
 
+def _pass_k_summary_files(exp_dir: Path) -> List[Path]:
+    patterns = (
+        "global_step_*/pass@k/pass_at_k_*.json",
+        "global_step_*/pass@k/*/pass_at_k.json",
+        "base/pass@k/pass_at_k_*.json",
+        "base/pass@k/*/pass_at_k.json",
+    )
+    files = set()
+    for pattern in patterns:
+        files.update(exp_dir.glob(pattern))
+    return sorted(path for path in files if path.is_file())
+
+
 def _collect_eval_points(project_dir: Path) -> List[EvalPoint]:
     points: List[EvalPoint] = []
     exp_dirs = _discover_experiment_dirs(project_dir)
@@ -120,7 +138,7 @@ def _collect_eval_points(project_dir: Path) -> List[EvalPoint]:
                     )
                 )
 
-        for pass_file in sorted(exp_dir.glob("global_step_*/pass@k/pass_at_k_*.json")):
+        for pass_file in _pass_k_summary_files(exp_dir):
             step = _parse_step(str(pass_file))
             with pass_file.open("r", encoding="utf-8") as handle:
                 payload = json.load(handle)
@@ -139,6 +157,9 @@ def _collect_eval_points(project_dir: Path) -> List[EvalPoint]:
                 continue
             k = payload.get("k")
             metric_name = f"pass_at_k_{k}" if k is not None else "pass_at_k"
+            metrics = {metric_name: float(pass_val)}
+            if k is None:
+                metrics["pass_at_k"] = float(pass_val)
 
             points.append(
                 EvalPoint(
@@ -146,7 +167,7 @@ def _collect_eval_points(project_dir: Path) -> List[EvalPoint]:
                     epochs=epochs,
                     step=step,
                     dataset=dataset_label,
-                    metrics={metric_name: float(pass_val), "pass_at_k": float(pass_val)},
+                    metrics=metrics,
                     exp_name=exp_name,
                 )
             )
@@ -209,16 +230,29 @@ def _plot_metric(points: List[EvalPoint], output_dir: Path) -> None:
                 continue
 
             plt.figure(figsize=(7, 4.5))
+            legend_handles = []
+            legend_labels = []
             for series_name, xy in sorted(by_series.items(), key=lambda item: item[0]):
-                xs = sorted(xy.keys())
-                ys = [xy[x] for x in xs]
-                plt.plot(xs, ys, marker="o", label=series_name)
+                xs = []
+                ys = []
+                for x in sorted(xy.keys()):
+                    value = float(xy[x])
+                    if not math.isfinite(value):
+                        continue
+                    xs.append(x)
+                    ys.append(value)
+                if not xs:
+                    continue
+                line, = plt.plot(xs, ys, marker="o", label=series_name)
+                legend_handles.append(line)
+                legend_labels.append(series_name)
 
             plt.title(f"{metric} vs step")
             plt.xlabel("global step")
             plt.ylabel(metric)
             plt.grid(True, linestyle="--", alpha=0.4)
-            plt.legend(loc="best", fontsize=9)
+            if legend_handles:
+                plt.legend(legend_handles, legend_labels, loc="best", fontsize=9)
             steps_label = _steps_per_epoch_label(dataset_points)
             if steps_label:
                 plt.gca().text(
@@ -263,12 +297,22 @@ def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
         return
 
     plt.figure(figsize=(9, 6))
+    legend_handles = []
+    legend_labels = []
     for (dataset, metric), xy in sorted(by_dataset_metric.items(), key=lambda item: (item[0][0], item[0][1])):
-        xs = sorted(xy.keys())
-        ys = [xy[x] for x in xs]
+        xs = []
+        ys = []
+        for x in sorted(xy.keys()):
+            value = float(xy[x])
+            if not math.isfinite(value):
+                continue
+            xs.append(x)
+            ys.append(value)
+        if not xs:
+            continue
         linestyle = "--" if metric.startswith("pass_at_k") else "-"
         label_metric = metric.replace("pass_at_k", "pass@k")
-        plt.plot(
+        line, = plt.plot(
             xs,
             ys,
             marker="o",
@@ -277,12 +321,15 @@ def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
             linestyle=linestyle,
             label=f"{dataset} | {label_metric}",
         )
+        legend_handles.append(line)
+        legend_labels.append(f"{dataset} | {label_metric}")
 
     plt.title("accuracy + pass@k across datasets")
     plt.xlabel("global step")
     plt.ylabel("score")
     plt.grid(True, linestyle="--", alpha=0.4)
-    plt.legend(loc="best", fontsize=8)
+    if legend_handles:
+        plt.legend(legend_handles, legend_labels, loc="best", fontsize=8)
     steps_label = _steps_per_epoch_label(points)
     if steps_label:
         plt.gca().text(

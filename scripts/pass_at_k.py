@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from verl.eval.runner import run as run_eval
 
@@ -114,10 +114,35 @@ def _compute_pass_at_k(rows: List[Dict[str, object]]) -> Dict[str, object]:
     }
 
 
+def _load_existing_summary(path: Path) -> Optional[Dict[str, object]]:
+    if not path.exists():
+        return None
+
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except (OSError, json.JSONDecodeError):
+        return None
+
+    return payload if isinstance(payload, dict) else None
+
+
+def _matches_existing_run(summary: Dict[str, object], checkpoint: str, eval_path: Path, k: int) -> bool:
+    existing_eval = summary.get("eval_data")
+    existing_k = summary.get("k")
+    existing_checkpoint = summary.get("checkpoint")
+    existing_model_path = summary.get("model_path")
+
+    eval_matches = existing_eval == str(eval_path)
+    k_matches = existing_k == k
+    checkpoint_matches = existing_checkpoint == checkpoint or existing_model_path == checkpoint
+    return eval_matches and k_matches and checkpoint_matches
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--checkpoint", required=True, help="Model checkpoint path or HF model id")
-    parser.add_argument("--dataset", required=True, help="Dataset name for eval")
+    parser.add_argument("--dataset", default="simpleqa", help="Dataset name for eval")
     parser.add_argument("--eval-data", required=True, help="Eval parquet path")
     parser.add_argument("--output-dir", required=True, help="Output directory for pass@k artifacts")
     parser.add_argument("--top-k", type=int, required=True, help="Number of samples per prompt (k)")
@@ -179,8 +204,13 @@ def main() -> None:
 
     eval_out = pass_k_dir / f"eval_{args.top_k}.json"
     summary_path = pass_k_dir / f"pass_at_k_{args.top_k}.json"
-    if eval_out.exists() and summary_path.exists():
-        print(f"Skipping eval/summary (already exists): {summary_path}")
+    existing_summary = _load_existing_summary(summary_path)
+    if (
+        existing_summary is not None
+        and eval_out.exists()
+        and _matches_existing_run(existing_summary, args.checkpoint, eval_path, args.top_k)
+    ):
+        print(f"Skipping pass@k (already exists): {summary_path}")
         return
 
     eval_result = run_eval(

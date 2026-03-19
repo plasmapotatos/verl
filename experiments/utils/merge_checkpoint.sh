@@ -11,8 +11,26 @@ if [[ -z "$CKPT_DIR" ]]; then
 fi
 
 VERL_DIR="${VERL_DIR:-/work/hdd/bbsg/twei2/rl/verl}"
-LOCAL_DIR="$VERL_DIR/$CKPT_DIR/actor"
-MERGED_DIR="$CKPT_DIR/merged_hf_model"
+# Normalize checkpoint path so absolute paths are not prefixed twice.
+if [[ "$CKPT_DIR" = /* ]]; then
+    CKPT_PATH="$CKPT_DIR"
+elif [[ -d "$CKPT_DIR" ]]; then
+    CKPT_PATH="$(cd "$CKPT_DIR" && pwd)"
+else
+    CKPT_PATH="$VERL_DIR/$CKPT_DIR"
+fi
+
+if [[ ! -d "$CKPT_PATH" ]]; then
+    echo "Checkpoint directory not found: $CKPT_PATH"
+    exit 1
+fi
+
+LOCAL_DIR="$CKPT_PATH"
+if [[ -d "$CKPT_PATH/actor" ]]; then
+    LOCAL_DIR="$CKPT_PATH/actor"
+fi
+
+MERGED_DIR="$CKPT_PATH/merged_hf_model"
 if [[ -d "$MERGED_DIR" ]]; then
     echo "Merged model already exists: $MERGED_DIR"
     exit 0

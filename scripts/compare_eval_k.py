@@ -140,6 +140,10 @@ def compare_summaries(
             continue
 
         reasons: List[str] = []
+        if stats_a.accuracy == 0.0 and stats_b.accuracy > 0.0:
+            reasons.append("test zero vs base non-zero")
+        if stats_b.accuracy == 0.0 and stats_a.accuracy > 0.0:
+            reasons.append("base zero vs test non-zero")
         if abs(stats_a.accuracy - stats_b.accuracy) >= args.acc_delta:
             reasons.append("accuracy change")
         if stats_a.most_common_answer != stats_b.most_common_answer:
@@ -237,28 +241,25 @@ def main() -> None:
         if summaries_b[qid].accuracy == 0.0 and summaries_a[qid].accuracy > 0.0
     ]
     zero_to_nonzero = len(zero_to_nonzero_ids)
+    nonzero_to_zero_ids = [
+        qid
+        for qid in common_ids
+        if summaries_a[qid].accuracy == 0.0 and summaries_b[qid].accuracy > 0.0
+    ]
+    nonzero_to_zero = len(nonzero_to_zero_ids)
 
     print(f"Compared {len(common_ids)} shared questions; {len(flagged)} flagged.")
     print(
         f"Test > Base accuracy: {improved}, Test < Base: {decreased}, "
-        f"Base zero -> Test non-zero: {zero_to_nonzero} (ids: {zero_to_nonzero_ids})"
+        f"Base zero -> Test non-zero: {zero_to_nonzero} (ids: {zero_to_nonzero_ids}), "
+        f"Test zero -> Base non-zero: {nonzero_to_zero} (ids: {nonzero_to_zero_ids})"
     )
     output_root = args.output_dir or _repo_root() / "outputs" / "compare_eval_k"
     output_root.mkdir(parents=True, exist_ok=True)
 
-    repo_root = _repo_root()
-    rel_a = args.eval_a.resolve()
-    rel_b = args.eval_b.resolve()
-    try:
-        rel_a = rel_a.relative_to(repo_root)
-    except ValueError:
-        rel_a = args.eval_a.resolve()
-    try:
-        rel_b = rel_b.relative_to(repo_root)
-    except ValueError:
-        rel_b = args.eval_b.resolve()
-
-    file_name = f"{_sanitize_label(str(rel_a))}__vs__{_sanitize_label(str(rel_b))}.json"
+    file_name = (
+        f"{_sanitize_label(args.eval_a.name)}__vs__{_sanitize_label(args.eval_b.name)}.json"
+    )
     summary_path = output_root / file_name
     reasons_by_id = {entry.id: entry.reasons for entry in flagged}
     question_records = []
@@ -310,6 +311,10 @@ def main() -> None:
         "base_zero_test_nonzero": {
             "count": zero_to_nonzero,
             "ids": zero_to_nonzero_ids,
+        },
+        "test_zero_base_nonzero": {
+            "count": nonzero_to_zero,
+            "ids": nonzero_to_zero_ids,
         },
         "flagged_questions": question_records,
         "metrics": {

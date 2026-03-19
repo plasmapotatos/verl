@@ -103,7 +103,7 @@ spin_prune() {
 		return 0
 	fi
 	echo "Pruning checkpoints in $CKPT_ROOT"
-	python3 "$VERL_DIR/scripts/prune_checkpoints.py" "$CKPT_ROOT"
+	python3 "$VERL_DIR/scripts/prune_experiment_checkpoints.py" "$CKPT_ROOT"
 }
 
 spin_run() {

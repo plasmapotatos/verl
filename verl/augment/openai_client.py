@@ -8,7 +8,7 @@ from typing import List
 
 
 class OpenAIClient:
-    def __init__(self, model: str) -> None:
+    def __init__(self, model: str, *, timeout: float = 60.0) -> None:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError(
@@ -25,9 +25,10 @@ class OpenAIClient:
             raise RuntimeError("httpx is required by the OpenAI SDK.") from exc
 
         # Avoid inheriting invalid SSL_CERT_FILE from the environment.
-        http_client = httpx.Client(trust_env=False)
+        http_client = httpx.Client(trust_env=False, timeout=timeout)
         self._client = OpenAI(api_key=api_key, http_client=http_client)
         self.model = model
+        self.timeout = timeout
 
     def generate(
         self,

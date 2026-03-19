@@ -23,9 +23,9 @@ class SimpleqaRichSftRewriter:
         max_chars: int = 6000,
         timeout: int = 30,
         log_path: str | None = None,
-        max_log_samples: int = 0,
+        max_log_samples: int | None = None,
     ) -> None:
-        self._client = OpenAIClient(model)
+        self._client = OpenAIClient(model, timeout=float(timeout))
         self._max_chars = max_chars
         self._timeout = timeout
         self._max_log_samples = max_log_samples
@@ -49,9 +49,9 @@ class SimpleqaRichSftRewriter:
             handle.write("")
 
     def _log(self, message: str) -> None:
-        if self._logged_samples >= self._max_log_samples:
+        if self._max_log_samples is not None and self._logged_samples > self._max_log_samples:
             return
-        with self._log_path.openass("a", encoding="utf-8") as handle:
+        with self._log_path.open("a", encoding="utf-8") as handle:
             handle.write(message.rstrip() + "\n")
 
     def _extract_sample_id(self, sample: dict) -> Optional[str]:
@@ -405,12 +405,24 @@ class SimpleqaRichSftRewriter:
             self._inc("skipped_missing_answer")
             return []
 
-        window = self._extract_window(
-            content=content,
-            question=question_text,
-            answer=answer_text,
-            seed=rng_seed,
-        )
+        try:
+            window = self._extract_window(
+                content=content,
+                question=question_text,
+                answer=answer_text,
+                seed=rng_seed,
+            )
+        except Exception as exc:  # pragma: no cover - best-effort guard against unexpected failures
+            self._log("[sample] extract window exception")
+            self._log_failure(
+                "skipped_no_window",
+                sample,
+                question=question_text,
+                answer=answer_text,
+                details=f"exception during extraction: {exc}",
+            )
+            self._inc("skipped_no_window")
+            return []
         if not window:
             self._log("[sample] no window extracted")
             self._log_failure(
@@ -424,12 +436,24 @@ class SimpleqaRichSftRewriter:
             return []
         self._log("[sample] window_preview=" + self._truncate(window))
 
-        rich = self._generate_rich_qa(
-            passage=window,
-            question=question_text,
-            answer=answer_text,
-            seed=rng_seed,
-        )
+        try:
+            rich = self._generate_rich_qa(
+                passage=window,
+                question=question_text,
+                answer=answer_text,
+                seed=rng_seed,
+            )
+        except Exception as exc:  # pragma: no cover - best-effort guard against unexpected failures
+            self._log("[sample] rich qa generation exception")
+            self._log_failure(
+                "skipped_rich_failed",
+                sample,
+                question=question_text,
+                answer=answer_text,
+                details=f"exception during generation: {exc}",
+            )
+            self._inc("skipped_rich_failed")
+            return []
         if not rich:
             self._log("[sample] rich qa generation failed")
             self._log_failure(
@@ -445,14 +469,26 @@ class SimpleqaRichSftRewriter:
         rich_question = rich["rich_question"]
         rich_answer = rich["rich_answer"]
 
-        verified, verification_reason = self._verify_rich_qa(
-            passage=window,
-            original_question=question_text,
-            original_answer=answer_text,
-            rich_question=rich_question,
-            rich_answer=rich_answer,
-            seed=rng_seed,
-        )
+        try:
+            verified, verification_reason = self._verify_rich_qa(
+                passage=window,
+                original_question=question_text,
+                original_answer=answer_text,
+                rich_question=rich_question,
+                rich_answer=rich_answer,
+                seed=rng_seed,
+            )
+        except Exception as exc:  # pragma: no cover - best-effort guard against unexpected failures
+            self._log("[sample] verification exception")
+            self._log_failure(
+                "skipped_verification_failed",
+                sample,
+                question=question_text,
+                answer=answer_text,
+                details=f"exception during verification: {exc}",
+            )
+            self._inc("skipped_verification_failed")
+            return []
         self._log(
             f"[sample] verification={'pass' if verified else 'fail'} reason={verification_reason}"
         )

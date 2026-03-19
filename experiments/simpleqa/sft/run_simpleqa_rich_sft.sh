@@ -21,5 +21,5 @@ RESPONSE_DICT_KEYS="" \
 MAX_LENGTH="4096" \
 FILTER_OVERLONG_PROMPTS="1" \
 LR_LIST="1.5e-4" \
-EPOCHS_LIST="1 3 6 10" \
+EPOCHS_LIST="1 3 6 10 20 30" \
 bash experiments/sft/run_sft_sweep_with_eval.sh

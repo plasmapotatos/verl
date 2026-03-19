@@ -1,4 +1,4 @@
-lo#!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # make sure we DON'T join some external ray cluster
@@ -382,11 +382,13 @@ run_pass_at_k () {
 	if [[ "$PASS_AT_K_MODE" != "last" && "$PASS_AT_K_MODE" != "all" ]]; then
 		afail "PASS_AT_K_MODE must be one of: none|last|all"
 	fi
-	local eval_data="$PASS_AT_K_EVAL_DATA"
-	if [[ -z "$eval_data" ]]; then
+	read -r -a pass_at_k_paths <<<"${PASS_AT_K_EVAL_DATA:-}"
+	if [[ ${#pass_at_k_paths[@]} -eq 0 ]]; then
 		echo "Skipping pass@k (PASS_AT_K_EVAL_DATA not provided)"
 		return
 	fi
+
+	local run_for_ckpt out_dir eval_data eval_tag merged_dir step
 
 	if [[ "$PASS_AT_K_MODE" == "last" ]]; then
 		local ckpt_dir
@@ -395,22 +397,27 @@ run_pass_at_k () {
 			echo "Skipping $exp_name (no global_step_* found)"
 			return
 		fi
-		local merged_dir="$ckpt_dir/merged_hf_model"
+		merged_dir="$ckpt_dir/merged_hf_model"
 		if [[ ! -d "$merged_dir" ]]; then
 			echo "Skipping $exp_name (missing merged_hf_model under $ckpt_dir)"
 			return
 		fi
 
-		echo "Running pass@k for $exp_name -> $merged_dir"
-		python3 "$VERL_DIR/scripts/pass_at_k.py" \
-			--checkpoint "$merged_dir" \
-			--dataset "$PASS_AT_K_DATASET" \
-			--eval-data "$eval_data" \
-			--output-dir "$exp_dir" \
-			--top-k "$PASS_AT_K_TOP_K" \
-			--top-p "$PASS_AT_K_TOP_P" \
-			--temperature "$PASS_AT_K_TEMPERATURE" \
-			--use-judge
+		for eval_data in "${pass_at_k_paths[@]}"; do
+			eval_tag="passatk_$(basename "${eval_data%.parquet}")"
+			out_dir="$exp_dir/pass_at_k/$eval_tag/last"
+			mkdir -p "$out_dir"
+			echo "Running pass@k for $exp_name @ last -> $merged_dir (data=$eval_data)"
+			python3 "$VERL_DIR/scripts/pass_at_k.py" \
+				--checkpoint "$merged_dir" \
+				--dataset "$PASS_AT_K_DATASET" \
+				--eval-data "$eval_data" \
+				--output-dir "$out_dir" \
+				--top-k "$PASS_AT_K_TOP_K" \
+				--top-p "$PASS_AT_K_TOP_P" \
+				--temperature "$PASS_AT_K_TEMPERATURE" \
+				--use-judge
+		done
 		return
 	fi
 
@@ -423,25 +430,28 @@ run_pass_at_k () {
 	local sorted_ckpts
 	sorted_ckpts=( $(printf '%s\n' "${ckpt_dirs[@]}" | sort -V) )
 	for ckpt_dir in "${sorted_ckpts[@]}"; do
-		local merged_dir="$ckpt_dir/merged_hf_model"
+		merged_dir="$ckpt_dir/merged_hf_model"
 		if [[ ! -d "$merged_dir" ]]; then
 			echo "Skipping $exp_name @ $ckpt_dir (missing merged_hf_model)"
 			continue
 		fi
-		local step
 		step="$(basename "$ckpt_dir")"
-		local out_dir="$exp_dir/$step"
-		echo "Running pass@k for $exp_name @ $step -> $merged_dir"
-		python3 "$VERL_DIR/scripts/pass_at_k.py" \
-			--checkpoint "$merged_dir" \
-			--dataset "$PASS_AT_K_DATASET" \
-			--eval-data "$eval_data" \
-			--output-dir "$out_dir" \
-			--top-k "$PASS_AT_K_TOP_K" \
-			--top-p "$PASS_AT_K_TOP_P" \
-			--temperature "$PASS_AT_K_TEMPERATURE" \
-			--use-judge
-	done
+		for eval_data in "${pass_at_k_paths[@]}"; do
+			eval_tag="passatk_$(basename "${eval_data%.parquet}")"
+			out_dir="$exp_dir/$step/pass_at_k/$eval_tag"
+			mkdir -p "$out_dir"
+			echo "Running pass@k for $exp_name @ $step -> $merged_dir (data=$eval_data)"
+			python3 "$VERL_DIR/scripts/pass_at_k.py" \
+				--checkpoint "$merged_dir" \
+				--dataset "$PASS_AT_K_DATASET" \
+				--eval-data "$eval_data" \
+				--output-dir "$out_dir" \
+				--top-k "$PASS_AT_K_TOP_K" \
+				--top-p "$PASS_AT_K_TOP_P" \
+				--temperature "$PASS_AT_K_TEMPERATURE" \
+				--use-judge
+		done
+		done
 }
 
 run_generation () {
@@ -548,17 +558,27 @@ run_base_eval () {
 		run_grade "$gen_out_eval"
 	done
 
-	if [[ "$PASS_AT_K_MODE" != "none" && -n "$PASS_AT_K_EVAL_DATA" ]]; then
-		echo "Running pass@k for base model"
-		python3 "$VERL_DIR/scripts/pass_at_k.py" \
-			--checkpoint Qwen/Qwen2.5-VL-3B-Instruct \
-			--dataset "$PASS_AT_K_DATASET" \
-			--eval-data "$PASS_AT_K_EVAL_DATA" \
-			--output-dir "$base_dir" \
-			--top-k "$PASS_AT_K_TOP_K" \
-			--top-p "$PASS_AT_K_TOP_P" \
-			--temperature "$PASS_AT_K_TEMPERATURE" \
-			--use-judge
+	if [[ "$PASS_AT_K_MODE" != "none" ]]; then
+		read -r -a pass_at_k_paths <<<"${PASS_AT_K_EVAL_DATA:-}"
+		if [[ ${#pass_at_k_paths[@]} -gt 0 ]]; then
+			local base_passatk_root="$base_dir/pass_at_k"
+			for eval_path in "${pass_at_k_paths[@]}"; do
+				local eval_tag
+				eval_tag="passatk_$(basename "${eval_path%.parquet}")"
+				local out_dir="$base_passatk_root/$eval_tag"
+				mkdir -p "$out_dir"
+				echo "Running pass@k for base model -> $out_dir (data=$eval_path)"
+				python3 "$VERL_DIR/scripts/pass_at_k.py" \
+					--checkpoint Qwen/Qwen2.5-VL-3B-Instruct \
+					--dataset "$PASS_AT_K_DATASET" \
+					--eval-data "$eval_path" \
+					--output-dir "$out_dir" \
+					--top-k "$PASS_AT_K_TOP_K" \
+					--top-p "$PASS_AT_K_TOP_P" \
+					--temperature "$PASS_AT_K_TEMPERATURE" \
+					--use-judge
+			done
+		fi
 	fi
 }
 
@@ -723,6 +743,19 @@ run_progressive_lr () {
 	local exp_dir="$ROOT/$exp_name"
 	mkdir -p "$exp_dir"
 
+	local expected_total_steps=$(( max_epoch * steps_per_epoch ))
+	local latest_ckpt
+	latest_ckpt="$(pick_last_ckpt "$exp_dir")"
+	local latest_step
+	local skip_training=0
+	if [[ -n "$latest_ckpt" ]]; then
+		latest_step="$(ckpt_step_from_dir "$latest_ckpt")"
+		if [[ "$latest_step" =~ ^[0-9]+$ ]] && (( latest_step >= expected_total_steps )); then
+			skip_training=1
+			echo "Training already complete for $exp_name (step=$latest_step >= $expected_total_steps), skipping training."
+		fi
+	fi
+
 	local target_map_file="$exp_dir/target_epoch_step_map.txt"
 	local processed_steps_file="$exp_dir/processed_checkpoints.txt"
 	local evaled_epochs_file="$exp_dir/evaluated_epochs.txt"
@@ -738,15 +771,19 @@ run_progressive_lr () {
 	echo "Target epochs -> steps (steps_per_epoch=$steps_per_epoch):"
 	cat "$target_map_file"
 
-	launch_train_background "$exp_name" "$max_epoch"
-	local train_pid
-	train_pid="$(cat "$exp_dir/train.pid")"
+	if [[ "$skip_training" -eq 0 ]]; then
+		launch_train_background "$exp_name" "$max_epoch"
+		local train_pid
+		train_pid="$(cat "$exp_dir/train.pid")"
 
-	monitor_and_eval_checkpoints "$exp_name" "$exp_dir" "$target_map_file" \
-		"$candidates_file" "$train_pid"
+		monitor_and_eval_checkpoints "$exp_name" "$exp_dir" "$target_map_file" \
+			"$candidates_file" "$train_pid"
 
-	# Wait for training to fully finish
-	wait "$train_pid"
+		# Wait for training to fully finish
+		wait "$train_pid"
+	else
+		echo "Skipping progressive training for $exp_name; using existing checkpoints for evaluation."
+	fi
 
 	# Final pass in case last checkpoint appeared near the end
 	while IFS=: read -r ep target_step; do

@@ -6,7 +6,7 @@ EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/rich_sft/simpleqa_
 DATASET="simpleqa"
 TOP_K=32
 TOP_P=0.9
-TEMPERATURE=0.8
+TEMPERATURE=1
 PASS_AT_K_MODE="${PASS_AT_K_MODE:-last}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

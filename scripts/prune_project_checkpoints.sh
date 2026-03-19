@@ -15,7 +15,7 @@ if [[ ! -d "$project_dir" ]]; then
 fi
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-prune_script="$script_dir/prine_experiment_checkpoints.py"
+prune_script="$script_dir/prune_experiment_checkpoints.py"
 
 if [[ ! -f "$prune_script" ]]; then
   echo "Error: prune script not found: $prune_script" >&2

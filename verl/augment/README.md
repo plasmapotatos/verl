@@ -16,10 +16,7 @@ Run augmentation using the built-in `templates` method:
 python -m verl.augment.cli \
   --input /path/to/input.parquet \
   --output /path/to/output.parquet \
-  --method templates \
-  --n 1 \
-  --seed 123 \
-  --mix_original
+  --method templates
 ```
 
 Write per-method outputs:
