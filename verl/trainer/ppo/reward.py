@@ -129,12 +129,17 @@ def load_reward_manager(config, tokenizer, num_examine, **reward_kwargs):
             final_compute_score = default_compute_score
 
     # Instantiate and return the reward manager with the specified parameters
+    reward_manager_kwargs = dict(reward_kwargs)
+    reward_mode = config.reward_model.get("reward_mode", "binary")
+    if reward_manager_name == "naive":
+        reward_manager_kwargs.setdefault("reward_mode", reward_mode)
+
     return reward_manager_cls(
         tokenizer=tokenizer,
         num_examine=num_examine,
         compute_score=final_compute_score,
         reward_fn_key=config.data.reward_fn_key,
-        **reward_kwargs,
+        **reward_manager_kwargs,
     )
 
 

@@ -3,11 +3,11 @@ set -euo pipefail
 
 PROJECT_NAME="simpleqa_rich_sft_refusal_progressive"
 
-TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/train_richqa_combined.parquet"
+TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/sft/train_richqa_combined.parquet"
 
-EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/train_richqa_answer_frac0.2.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/train_richqa_answer_origqa_frac0.2.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/train_richqa_refusal_frac0.2.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/train_richqa_refusal_origqa_frac0.2.parquet"
+EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/sft/train_richqa_answer_frac0.2.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/sft/train_richqa_answer_origqa_frac0.2.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/sft/train_richqa_refusal_frac0.2.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/sft/train_richqa_refusal_origqa_frac0.2.parquet"
 
-PASS_AT_K_EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/train_richqa_answer_origqa_frac0.2.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/train_richqa_refusal_origqa_frac0.2.parquet"
+PASS_AT_K_EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/sft/train_richqa_answer_origqa_frac0.2.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/sft/train_richqa_refusal_origqa_frac0.2.parquet"
 
 PROJECT_NAME="$PROJECT_NAME" \
 TRAIN_DATA="$TRAIN_DATA" \

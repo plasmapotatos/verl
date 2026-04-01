@@ -45,7 +45,7 @@ export RAY_USAGE_STATS_ENABLED=0
 #   PASS_AT_K_MODE pass@k mode: none|last|all (default: all)
 #   PASS_AT_K_TOP_K (default: 32)
 #   PASS_AT_K_TOP_P (default: 0.9)
-#   PASS_AT_K_TEMPERATURE (default: 0.8)
+#   PASS_AT_K_TEMPERATURE (default: 1)
 #   PASS_AT_K_DATASET (default: "simpleqa")
 #   PASS_AT_K_EVAL_DATA single parquet for pass@k (required to run pass@k)
 #   POLL_INTERVAL polling interval in seconds (default: 15)
@@ -94,7 +94,7 @@ RUN_BASE_EVAL="${RUN_BASE_EVAL:-1}"
 PASS_AT_K_MODE="${PASS_AT_K_MODE:-all}"
 PASS_AT_K_TOP_K="${PASS_AT_K_TOP_K:-32}"
 PASS_AT_K_TOP_P="${PASS_AT_K_TOP_P:-0.9}"
-PASS_AT_K_TEMPERATURE="${PASS_AT_K_TEMPERATURE:-0.8}"
+PASS_AT_K_TEMPERATURE="${PASS_AT_K_TEMPERATURE:-1}"
 PASS_AT_K_DATASET="${PASS_AT_K_DATASET:-simpleqa}"
 PASS_AT_K_EVAL_DATA="${PASS_AT_K_EVAL_DATA:-}"
 POLL_INTERVAL="${POLL_INTERVAL:-15}"
@@ -712,6 +712,42 @@ maybe_eval_target_epoch () {
 	fi
 }
 
+run_latest_checkpoint_if_needed () {
+	local exp_name="$1"
+	local exp_dir="$2"
+	local processed_steps_file="$3"
+	local evaled_epochs_file="$4"
+	local evaled_ckpts_file="$5"
+
+	local latest_ckpt
+	latest_ckpt="$(pick_last_ckpt "$exp_dir")"
+	if [[ -z "$latest_ckpt" ]]; then
+		echo "No checkpoints available for $exp_name; skipping final eval."
+		return
+	fi
+
+	if grep -qx "$latest_ckpt" "$processed_steps_file" 2>/dev/null; then
+		echo "Latest checkpoint already evaluated: $latest_ckpt"
+		return
+	fi
+
+	echo "Evaluating final checkpoint for $exp_name -> $latest_ckpt"
+	run_eval_for_ckpt "$exp_name" "$latest_ckpt"
+	echo "$latest_ckpt" >> "$processed_steps_file"
+	echo "latest" >> "$evaled_epochs_file"
+	echo "$latest_ckpt" >> "$evaled_ckpts_file"
+	run_pass_at_k "$exp_name" "$exp_dir"
+	refresh_plots
+
+	local latest_step
+	latest_step="$(ckpt_step_from_dir "$latest_ckpt")"
+	if [[ "$latest_step" =~ ^[0-9]+$ ]]; then
+		prune_checkpoints "$exp_dir" "$evaled_ckpts_file" "$latest_step"
+	else
+		prune_checkpoints "$exp_dir" "$evaled_ckpts_file" 0
+	fi
+}
+
 monitor_and_eval_checkpoints () {
 	local exp_name="$1"
 	local exp_dir="$2"
@@ -790,6 +826,8 @@ run_progressive_lr () {
 		maybe_eval_target_epoch "$exp_name" "$exp_dir" "$ep" "$target_step" \
 			"$processed_steps_file" "$evaled_epochs_file" "$evaled_ckpts_file"
 	done < "$target_map_file"
+	run_latest_checkpoint_if_needed "$exp_name" "$exp_dir" \
+		"$processed_steps_file" "$evaled_epochs_file" "$evaled_ckpts_file"
 }
 
 

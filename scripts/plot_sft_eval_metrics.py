@@ -8,7 +8,7 @@ import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Callable, Dict, List, Optional, Tuple
 
 import matplotlib
 
@@ -272,25 +272,27 @@ def _plot_metric(points: List[EvalPoint], output_dir: Path) -> None:
             plt.close()
 
 
-def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
-    combined_dir = output_dir / "combined"
-    combined_dir.mkdir(parents=True, exist_ok=True)
-
-    metrics = sorted({m for p in points for m in p.metrics.keys()})
-    target_metrics = [m for m in metrics if m == "accuracy" or m.startswith("pass_at_k")]
-
+def _plot_combined_metric_set(
+    points: List[EvalPoint],
+    combined_dir: Path,
+    title: str,
+    filename: str,
+    metric_predicate: Callable[[str], bool],
+    linestyle_fn: Callable[[str], str],
+    label_formatter: Optional[Callable[[str], str]] = None,
+) -> None:
     by_dataset_metric: Dict[Tuple[str, str], Dict[int, float]] = {}
     for point in points:
         x = point.step
         if x < 0:
             continue
-        for metric in target_metrics:
-            if metric not in point.metrics:
+        for metric, value in point.metrics.items():
+            if not metric_predicate(metric):
                 continue
             key = (point.dataset, metric)
             by_dataset_metric.setdefault(key, {})
             prev = by_dataset_metric[key].get(x)
-            val = float(point.metrics[metric])
+            val = float(value)
             by_dataset_metric[key][x] = max(prev, val) if prev is not None else val
 
     if not by_dataset_metric:
@@ -310,8 +312,8 @@ def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
             ys.append(value)
         if not xs:
             continue
-        linestyle = "--" if metric.startswith("pass_at_k") else "-"
-        label_metric = metric.replace("pass_at_k", "pass@k")
+        linestyle = linestyle_fn(metric)
+        label_metric = label_formatter(metric) if label_formatter else metric
         line, = plt.plot(
             xs,
             ys,
@@ -324,7 +326,7 @@ def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
         legend_handles.append(line)
         legend_labels.append(f"{dataset} | {label_metric}")
 
-    plt.title("accuracy + pass@k across datasets")
+    plt.title(title)
     plt.xlabel("global step")
     plt.ylabel("score")
     plt.grid(True, linestyle="--", alpha=0.4)
@@ -344,9 +346,41 @@ def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
         )
     plt.tight_layout()
 
-    out_path = combined_dir / "accuracy_and_passk_all_datasets_by_step.png"
+    out_path = combined_dir / filename
     plt.savefig(out_path, dpi=150)
     plt.close()
+
+
+def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
+    combined_dir = output_dir / "combined"
+    combined_dir.mkdir(parents=True, exist_ok=True)
+
+    _plot_combined_metric_set(
+        points,
+        combined_dir,
+        title="accuracy + pass@k across datasets",
+        filename="accuracy_and_passk_all_datasets_by_step.png",
+        metric_predicate=lambda m: m == "accuracy" or m.startswith("pass_at_k"),
+        linestyle_fn=lambda metric: "--" if metric.startswith("pass_at_k") else "-",
+        label_formatter=lambda metric: metric.replace("pass_at_k", "pass@k"),
+    )
+    _plot_combined_metric_set(
+        points,
+        combined_dir,
+        title="attempt rate across datasets",
+        filename="attempt_rate_all_datasets_by_step.png",
+        metric_predicate=lambda m: m == "attempt_rate",
+        linestyle_fn=lambda _: "-.",
+    )
+    _plot_combined_metric_set(
+        points,
+        combined_dir,
+        title="accuracy attempted across datasets",
+        filename="accuracy_attempted_all_datasets_by_step.png",
+        metric_predicate=lambda m: m == "accuracy_attempted",
+        linestyle_fn=lambda _: "-",
+        label_formatter=lambda metric: metric.replace("accuracy_attempted", "accuracy attempted"),
+    )
 
 
 def main() -> None:

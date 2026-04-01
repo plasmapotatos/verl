@@ -24,6 +24,7 @@ def default_compute_score(
     sandbox_fusion_url=None,
     concurrent_semaphore=None,
     memory_limit_mb=None,
+    reward_mode=None,
 ):
     """Compute the score for a given solution based on the data source.
 
@@ -40,6 +41,7 @@ def default_compute_score(
     Raises:
         NotImplementedError: If the reward function is not implemented for the given data source.
     """
+    ability = extra_info.get("ability") if extra_info else None
     if data_source == "openai/gsm8k":
         from . import gsm8k
 
@@ -96,7 +98,7 @@ def default_compute_score(
     elif data_source == "simpleqa":
         from . import simpleqa
 
-        res = simpleqa.compute_score(solution_str, ground_truth)
+        res = simpleqa.compute_score(solution_str, ground_truth, ability, reward_mode=reward_mode)
     elif data_source in [
         "searchR1_nq",
         "searchR1_triviaqa",

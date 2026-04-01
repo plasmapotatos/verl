@@ -72,7 +72,7 @@ def run(
                 sample = {
                     "id": sample_id,
                     "question": record.get("question", ""),
-                    "answer": record.get("answer", ""),
+                    "answer": record.get("target", record.get("answer", "")),
                     "metadata": record.get("metadata", {}),
                 }
                 if use_judge and local_judge is not None:

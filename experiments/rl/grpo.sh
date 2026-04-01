@@ -38,6 +38,7 @@ SAVE_FREQ=${SAVE_FREQ:-200}
 N_GPUS_PER_NODE=${N_GPUS_PER_NODE:-2}
 NNODES=${NNODES:-1}
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1}
+REWARD_MODE=${REWARD_MODE:-binary}
 
 CKPT_ROOT="outputs/rl/$PROJECT_NAME/$EXPERIMENT_NAME"
 PLOT_DIR=${PLOT_DIR:-"$CKPT_ROOT/plots"}
@@ -152,7 +153,8 @@ print(len(df))
 		trainer.nnodes="$NNODES" \
 		trainer.save_freq="$SAVE_FREQ" \
 		trainer.test_freq="$SAVE_FREQ" \
-		trainer.total_epochs="$TOTAL_EPOCHS"
+		trainer.total_epochs="$TOTAL_EPOCHS" \
+		reward_model.reward_mode="$REWARD_MODE"
 }
 
 grpo_eval() {

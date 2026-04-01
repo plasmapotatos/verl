@@ -50,6 +50,11 @@ def main() -> None:
         default=None,
         help="Output parquet path (defaults to input with _origqa suffix)",
     )
+    parser.add_argument(
+        "--preserve-answer-reward",
+        action="store_true",
+        help="Keep existing answer and reward_model columns instead of restoring them",
+    )
     args = parser.parse_args()
 
     input_path = args.input
@@ -79,9 +84,10 @@ def main() -> None:
 
     updated = df.copy()
     updated["question"] = updated["id"].map(map_question)
-    updated["answer"] = updated["id"].map(map_answer)
     updated["prompt"] = updated["id"].map(map_prompt)
-    updated["reward_model"] = updated["id"].map(map_reward_model)
+    if not args.preserve_answer_reward:
+        updated["answer"] = updated["id"].map(map_answer)
+        updated["reward_model"] = updated["id"].map(map_reward_model)
 
     missing = updated["question"].isna().sum()
     if missing:

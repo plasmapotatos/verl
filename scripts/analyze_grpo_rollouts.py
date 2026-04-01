@@ -9,6 +9,20 @@ from collections import defaultdict
 from pathlib import Path
 
 try:
+    from thefuzz import fuzz as _fuzz  # type: ignore
+except ImportError:
+    try:
+        from fuzzywuzzy import fuzz as _fuzz  # type: ignore
+    except ImportError:
+        _fuzz = None
+
+# Two rollout outputs are considered identical if their fuzzy ratio (0–100)
+# meets or exceeds this threshold.  100 = exact match only; lower values fold
+# in near-duplicates.  95 catches trivial differences (trailing whitespace,
+# a single punctuation char) while keeping genuinely different answers distinct.
+FUZZY_UNIQUE_THRESHOLD = 95
+
+try:
     import datasets  # type: ignore
 except Exception:  # pragma: no cover - optional dependency at runtime
     datasets = None
@@ -139,6 +153,26 @@ def _rollout_file_sort_key(path):
     if match:
         return (1, int(match.group(1)), path.name)
     return (2, stem, path.name)
+
+
+def _count_unique_fuzzy(outputs, threshold=FUZZY_UNIQUE_THRESHOLD):
+    """Count distinct outputs using fuzzy string similarity (thefuzz/fuzzywuzzy).
+
+    Each output is compared against the first member of every existing cluster.
+    If fuzz.ratio() >= threshold the output joins that cluster; otherwise it
+    starts a new one.  Falls back to exact set-match if the library is absent.
+    O(n * clusters) — fine for small GRPO groups.
+    """
+    if _fuzz is None:
+        return len(set(outputs))
+    clusters = []
+    for output in outputs:
+        for rep in clusters:
+            if _fuzz.ratio(output, rep) >= threshold:
+                break
+        else:
+            clusters.append(output)
+    return len(clusters)
 
 
 def _mean(values):
@@ -317,7 +351,8 @@ def _summarize_steps(matches):
                 "min_score": min(scores) if scores else None,
                 "positive_count": sum(1 for score in scores if score > 0),
                 "zero_count": sum(1 for score in scores if score == 0),
-                "unique_outputs": len(set(outputs)),
+                "negative_count": sum(1 for score in scores if score < 0),
+                "unique_outputs": _count_unique_fuzzy(outputs),
                 "best_output": best_item.get("output", "") if best_item else "",
             }
         )
@@ -335,6 +370,106 @@ def _sample_overall(matches, step_rows):
         "last_step": max(steps) if steps else None,
         "best_score": max(scores) if scores else None,
         "mean_score": _mean(scores),
+    }
+
+
+def _build_diversity_stats(sample_data):
+    """Compute aggregate rollout diversity statistics across all steps.
+
+    A question is considered "general" (answerable) if any of its rollouts
+    ever scored > 0 across any recorded step.  Only general questions are
+    included in the per-step counts so that refusal-type questions don't
+    dilute the collapse signal.
+    """
+    # Determine general questions: ever had a positive-scoring rollout.
+    general_keys = set()
+    for sample_key, detail in sample_data.items():
+        for row in detail["by_step"]:
+            if row.get("max_score") is not None and row["max_score"] > 0:
+                general_keys.add(sample_key)
+                break
+
+    # Collect per-step group stats for general questions only.
+    step_group_stats = defaultdict(list)
+    for sample_key, detail in sample_data.items():
+        if sample_key not in general_keys:
+            continue
+        for row in detail["by_step"]:
+            step_group_stats[row["step"]].append({
+                "positive": row.get("positive_count", 0),
+                "zero": row.get("zero_count", 0),
+                "negative": row.get("negative_count", 0),
+                "unique_outputs": row.get("unique_outputs", 1),
+                "mean_score": row.get("mean_score"),
+            })
+
+    all_steps = sorted(step_group_stats.keys())
+
+    step_rows = []
+    for step in all_steps:
+        groups = step_group_stats[step]
+        total = len(groups)
+        # all_zero: every rollout scored exactly 0 (pure not-attempted collapse)
+        all_zero = sum(1 for g in groups if g["positive"] == 0 and g["negative"] == 0 and g["zero"] > 0)
+        # mixed_no_positive: has both 0 and negative scores but no positive (partial collapse)
+        mixed_no_pos = sum(1 for g in groups if g["positive"] == 0 and g["negative"] > 0)
+        has_pos = sum(1 for g in groups if g["positive"] > 0)
+        mean_unique = _mean([g["unique_outputs"] for g in groups])
+        mean_score = _mean([g["mean_score"] for g in groups if g["mean_score"] is not None])
+        step_rows.append({
+            "step": step,
+            "total_general": total,
+            "has_positive_count": has_pos,
+            "mixed_no_positive_count": mixed_no_pos,
+            "all_zero_count": all_zero,
+            "has_positive_pct": has_pos / total if total else 0.0,
+            "mixed_no_positive_pct": mixed_no_pos / total if total else 0.0,
+            "all_zero_pct": all_zero / total if total else 0.0,
+            "mean_unique_outputs": mean_unique,
+            "mean_group_score": mean_score,
+        })
+
+    # Collapse trajectory: start from questions that had at least one positive
+    # rollout at the earliest recorded step, then track their fate over time.
+    collapse_trajectory = []
+    if all_steps:
+        earliest_step = all_steps[0]
+        survivor_keys = set()
+        for sample_key, detail in sample_data.items():
+            if sample_key not in general_keys:
+                continue
+            for row in detail["by_step"]:
+                if row["step"] == earliest_step and row.get("positive_count", 0) > 0:
+                    survivor_keys.add(sample_key)
+                    break
+
+        n_total = len(survivor_keys)
+        if n_total > 0:
+            for step in all_steps:
+                still_positive = 0
+                gone_all_zero = 0
+                for sample_key in survivor_keys:
+                    detail = sample_data.get(sample_key)
+                    if detail is None:
+                        continue
+                    for row in detail["by_step"]:
+                        if row["step"] == step:
+                            if row.get("positive_count", 0) > 0:
+                                still_positive += 1
+                            elif row.get("zero_count", 0) > 0 and row.get("negative_count", 0) == 0:
+                                gone_all_zero += 1
+                            break
+                collapse_trajectory.append({
+                    "step": step,
+                    "survival_rate": still_positive / n_total,
+                    "all_zero_rate": gone_all_zero / n_total,
+                    "n_total": n_total,
+                })
+
+    return {
+        "steps": step_rows,
+        "collapse_trajectory": collapse_trajectory,
+        "general_question_count": len(general_keys),
     }
 
 
@@ -376,8 +511,10 @@ def _resolve_initial_sample_key(args, dataset_index, sample_by_key, matches_by_k
 
 
 def _default_output_base(rollout_dir):
-    rollout_name = Path(rollout_dir).resolve().name
-    return Path("outputs") / "rollout_analysis" / rollout_name / "explorer"
+    rollout_path = Path(rollout_dir).resolve()
+    # Include parent dir name so experiments with identically-named rollout dirs
+    # (e.g. both called "rollouts") don't overwrite each other.
+    return Path("outputs") / "rollout_analysis" / rollout_path.parent.name / rollout_path.name / "explorer"
 
 
 def _build_explorer(args):
@@ -460,6 +597,7 @@ def _build_explorer(args):
         "initial_sample_key": initial_sample_key,
         "sample_index": sample_index,
         "sample_data": sample_data,
+        "aggregate_diversity": _build_diversity_stats(sample_data),
     }
 
 
@@ -756,6 +894,22 @@ def _render_html(explorer, html_output):
       font-size: 12px;
       color: var(--muted);
     }
+    .diversity-line {
+      font-size: 12.5px;
+      color: var(--muted);
+      margin-top: 5px;
+      font-style: italic;
+    }
+    .score-pos { color: var(--green); font-weight: 600; }
+    .score-zero { color: var(--gold); font-weight: 600; }
+    .score-neg { color: var(--rose); font-weight: 600; }
+    .collapse-wrap {
+      margin-top: 10px;
+      border: 1px solid #ebe0cc;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #fffdf8;
+    }
     @media (max-width: 1100px) {
       .layout { grid-template-columns: 1fr; }
       .result-list { max-height: none; }
@@ -788,6 +942,37 @@ def _render_html(explorer, html_output):
         <button id="nextBtn" class="secondary">Next Matched</button>
       </div>
       <div class="footer-note" id="statusLine"></div>
+    </section>
+
+    <section class="panel" style="margin-bottom:16px">
+      <h2>Aggregate Diversity Analysis</h2>
+      <div class="sub" id="diversityGeneralCount"></div>
+      <div style="overflow-x:auto;margin-top:12px">
+        <table id="diversityTable">
+          <thead>
+            <tr>
+              <th>Step</th>
+              <th>General Qs</th>
+              <th>Has positive (%)</th>
+              <th>Mixed no-positive (%)</th>
+              <th>All-zero (%)</th>
+              <th>Mean unique outputs</th>
+              <th>Mean group score</th>
+            </tr>
+          </thead>
+          <tbody id="diversityTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-bottom:16px">
+      <h2>Positive-rollout Survival (Collapse Trajectory)</h2>
+      <div class="sub">
+        Tracks questions that had ≥1 positive rollout at the earliest step.
+        <span class="score-pos">■</span> fraction still positive &nbsp;
+        <span class="score-zero">■</span> fraction gone all-zero.
+      </div>
+      <div class="collapse-wrap" id="collapseWrap"></div>
     </section>
 
     <div class="layout">
@@ -1006,6 +1191,82 @@ def _render_html(explorer, html_output):
       });
 
       return scored.slice(0, 120).map(item => item.entry);
+    }
+
+    function fmtPct(v) { return (v * 100).toFixed(1) + '%'; }
+
+    function buildCollapseSvg(trajectory) {
+      if (!trajectory || !trajectory.length) {
+        return '<div class="empty">No collapse trajectory data (need ≥2 steps with positive rollouts at the first step).</div>';
+      }
+      const width = 900, height = 220, left = 54, right = 18, top = 18, bottom = 34;
+      const innerWidth = width - left - right;
+      const innerHeight = height - top - bottom;
+      const xs = trajectory.map(r => r.step);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const xSpan = Math.max(1, maxX - minX);
+
+      function px(step, frac) {
+        const x = left + ((step - minX) / xSpan) * innerWidth;
+        const y = top + (1 - frac) * innerHeight;
+        return [x, y];
+      }
+      function polyline(key, color, dash) {
+        const pts = trajectory.map(r => { const [x,y] = px(r.step, r[key]); return x.toFixed(1)+','+y.toFixed(1); }).join(' ');
+        return `<polyline fill="none" stroke="${color}" stroke-width="2.6" ${dash ? 'stroke-dasharray="6 4"' : ''} points="${pts}"></polyline>`;
+      }
+      const grid = [0, 0.25, 0.5, 0.75, 1].map(frac => {
+        const [, y] = px(minX, frac);
+        return `<line x1="${left}" y1="${y.toFixed(1)}" x2="${width-right}" y2="${y.toFixed(1)}" stroke="#e7e7e1" stroke-width="1"/>
+                <text x="8" y="${(y+4).toFixed(1)}" fill="#666" font-size="11">${fmtPct(frac)}</text>`;
+      }).join('');
+      const ticks = trajectory.map(r => {
+        const [x] = px(r.step, 0);
+        return `<text x="${x.toFixed(1)}" y="${height-10}" text-anchor="middle" fill="#666" font-size="11">${escapeHtml(r.step)}</text>`;
+      }).join('');
+      const dots = trajectory.map(r => {
+        const [x1,y1] = px(r.step, r.survival_rate);
+        const [x2,y2] = px(r.step, r.all_zero_rate);
+        return `<circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="3.6" fill="#2d7c31"/>
+                <circle cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="3.1" fill="#a76f17"/>`;
+      }).join('');
+      const nTotal = trajectory[0] ? trajectory[0].n_total : '?';
+      return `<svg viewBox="0 0 ${width} ${height}" width="100%" height="${height}" role="img" aria-label="Collapse trajectory">
+        <rect x="0" y="0" width="${width}" height="${height}" fill="#fffdf8"/>
+        ${grid}
+        <line x1="${left}" y1="${top}" x2="${left}" y2="${height-bottom}" stroke="#9aa0a6" stroke-width="1.2"/>
+        <line x1="${left}" y1="${height-bottom}" x2="${width-right}" y2="${height-bottom}" stroke="#9aa0a6" stroke-width="1.2"/>
+        ${polyline('survival_rate','#2d7c31',false)}
+        ${polyline('all_zero_rate','#a76f17',true)}
+        ${ticks}${dots}
+        <text x="${left+6}" y="${top+14}" fill="#2d7c31" font-size="11">survival (n=${escapeHtml(nTotal)})</text>
+        <text x="${left+6}" y="${top+28}" fill="#a76f17" font-size="11">all-zero rate</text>
+      </svg>`;
+    }
+
+    function renderAggregateDiversity() {
+      const div = explorer.aggregate_diversity;
+      const tableBody = document.getElementById('diversityTableBody');
+      const collapseWrap = document.getElementById('collapseWrap');
+      const generalCountEl = document.getElementById('diversityGeneralCount');
+      if (!div || !div.steps || !div.steps.length) {
+        tableBody.innerHTML = '<tr><td colspan="7"><div class="empty">No diversity data available.</div></td></tr>';
+        collapseWrap.innerHTML = '<div class="empty" style="padding:14px">No collapse data available.</div>';
+        return;
+      }
+      generalCountEl.textContent = div.general_question_count + ' general questions tracked (ever scored > 0).';
+      tableBody.innerHTML = div.steps.map(row => `
+        <tr>
+          <td>${escapeHtml(row.step)}</td>
+          <td>${escapeHtml(row.total_general)}</td>
+          <td class="score-pos">${escapeHtml(row.has_positive_count)} <span class="muted">(${fmtPct(row.has_positive_pct)})</span></td>
+          <td class="score-zero">${escapeHtml(row.mixed_no_positive_count)} <span class="muted">(${fmtPct(row.mixed_no_positive_pct)})</span></td>
+          <td class="score-neg">${escapeHtml(row.all_zero_count)} <span class="muted">(${fmtPct(row.all_zero_pct)})</span></td>
+          <td>${row.mean_unique_outputs != null ? Number(row.mean_unique_outputs).toFixed(2) : 'n/a'}</td>
+          <td>${row.mean_group_score != null ? Number(row.mean_group_score).toFixed(3) : 'n/a'}</td>
+        </tr>
+      `).join('');
+      collapseWrap.innerHTML = buildCollapseSvg(div.collapse_trajectory);
     }
 
     function renderResults() {
@@ -1237,6 +1498,14 @@ def _render_html(explorer, html_output):
         const stepMatches = matchesByStep[String(row.step)] || [];
         const preview = stepMatches.slice(0, maxPreview);
         const remaining = Math.max(0, stepMatches.length - preview.length);
+        const pos = row.positive_count || 0;
+        const zero = row.zero_count || 0;
+        const neg = row.negative_count || 0;
+        const diversityLine = `Diversity: ${escapeHtml(row.unique_outputs)} unique outputs &nbsp;·&nbsp; `
+          + `<span class="score-pos">+${escapeHtml(pos)}</span> / `
+          + `<span class="score-zero">0:${escapeHtml(zero)}</span> / `
+          + `<span class="score-neg">−${escapeHtml(neg)}</span> `
+          + `of ${escapeHtml(row.count)} rollouts`;
         return `
           <section class="step-card">
             <div class="step-header">
@@ -1248,6 +1517,7 @@ def _render_html(explorer, html_output):
                 <span>unique outputs: ${escapeHtml(row.unique_outputs)}</span>
               </div>
             </div>
+            <div class="diversity-line">${diversityLine}</div>
             <details open>
               <summary>Best output</summary>
               <pre>${escapeHtml(row.best_output || '')}</pre>
@@ -1365,6 +1635,7 @@ def _render_html(explorer, html_output):
     });
 
     buildMetaCards();
+    renderAggregateDiversity();
     renderResults();
     if (syncFromHash()) {
       renderCurrent();
@@ -1388,7 +1659,7 @@ def _render_html(explorer, html_output):
 def main():
     parser = argparse.ArgumentParser(description="Build an interactive GRPO rollout explorer.")
     parser.add_argument("--rollout-dir", required=True, help="Directory containing step JSONL rollout files.")
-    parser.add_argument("--dataset", required=True, help="Dataset parquet used to source sample IDs/questions.")
+    parser.add_argument("--dataset", default="data/simpleqa/data.parquet", help="Dataset parquet used to source sample IDs/questions.")
     initial = parser.add_mutually_exclusive_group(required=False)
     initial.add_argument("--sample-id", default=None, help="Optional sample ID to open initially in the explorer.")
     initial.add_argument("--sample-index", type=int, default=None, help="Optional dataset row index to open initially.")
