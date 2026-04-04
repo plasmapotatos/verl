@@ -13,6 +13,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="VERL dataset augmentation")
     parser.add_argument("--input", required=True, help="Input parquet path")
     parser.add_argument("--output", help="Output parquet path")
+    parser.add_argument("--existing_path", help="Existing parquet path to resume and append to")
     parser.add_argument("--output_dir", help="Output directory for per-method files")
     parser.add_argument("--method", action="append", default=[], help="Method name (repeatable)")
     parser.add_argument("--mode", help="Mode for LLM rewriter prompts")
@@ -46,13 +47,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.write_per_method and not args.output_dir:
         parser.error("--output_dir is required when --write_per_method is set")
 
-    if not args.write_per_method and not args.output:
+    if args.write_per_method and args.existing_path:
+        parser.error("--existing_path is only supported when --write_per_method is not set")
+
+    if not args.write_per_method and not args.output and not args.existing_path:
         parser.error("--output is required when --write_per_method is not set")
 
     run(
         input_path=args.input,
-        output_path=args.output,
+        output_path=args.output or args.existing_path,
         output_dir=args.output_dir,
+        existing_path=args.existing_path,
         methods=args.method,
         n_variants_per_method=args.n,
         seed=args.seed,

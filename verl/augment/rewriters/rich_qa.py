@@ -9,19 +9,19 @@ from typing import List, Optional
 from ..openai_client import OpenAIClient
 from ..registry import register
 from ..schemas import attach_augmentation_metadata, get_prompt_text
-from .simpleqa_web_utils import extract_urls, parse_json_payload, pick_source_text
+from .simpleqa_web_utils import extract_urls, find_answer_window, iter_source_texts, parse_json_payload
 
 
-@register("simpleqa_rich_sft")
-class SimpleqaRichSftRewriter:
-    name = "simpleqa_rich_sft"
+@register("rich_qa")
+class RichQaRewriter:
+    name = "rich_qa"
 
     def __init__(
         self,
         *,
         model: str = "gpt-4o-mini",
         max_chars: int = 6000,
-        timeout: int = 30,
+        timeout: int = 60,
         log_path: str | None = None,
         max_log_samples: int | None = None,
     ) -> None:
@@ -30,11 +30,13 @@ class SimpleqaRichSftRewriter:
         self._timeout = timeout
         self._max_log_samples = max_log_samples
         self._logged_samples = 0
-        normalized_log_path = Path(log_path) if log_path else Path("simpleqa_rich_sft.log")
+        normalized_log_path = Path(log_path) if log_path else Path("rich_qa.log")
         normalized_log_path.parent.mkdir(parents=True, exist_ok=True)
         self._log_path = normalized_log_path
         self._failure_dir = normalized_log_path.parent / f"{normalized_log_path.stem}_failures"
         self._failure_dir.mkdir(parents=True, exist_ok=True)
+        for f in self._failure_dir.glob("*.log"):
+            f.unlink()
         self._metrics = {
             "total_samples": 0,
             "skipped_no_urls": 0,
@@ -106,20 +108,25 @@ class SimpleqaRichSftRewriter:
     def _extract_window(self, *, content: str, question: str, answer: str, seed: int | None) -> Optional[str]:
         system_prompt = (
             "You are a careful extractor. Return JSON only with keys 'status' and 'window'. "
-            "ONLY return status 'found' only if the answer text appears as an exact substring in the passage. "
-            "If you cannot find the answer in the text, return status 'not_found' and window ''."
+            "Return status 'found' if the passage contains information that clearly supports the answer — "
+            "including abbreviations, alternate spellings, unit variations (e.g. '390m' for '390 metres'), "
+            "partial names (e.g. 'Hapke' for 'Bruce W. Hapke'), or paraphrased equivalents. "
+            "Only return status 'not_found' if the passage genuinely does not contain the answer or any clear reference to it."
         )
         user_prompt = (
-            "Find the span of text that contains the answer, if it exists. "
+            "Find the span of text that most clearly supports the answer, if it exists. "
             "Return up to 400 words before and 400 words after that span, VERBATIM, "
             "separated by a blank line from the answer span. If there are fewer words, return what exists.\n\n"
-            "### EXAMPLE ###"
-            "Example (do NOT mark as found):\n"
+            "### EXAMPLE (do NOT mark as found) ###\n"
             "Passage excerpt: '... M.H. Beg ... was appointed Chief Justice of India by the Indira Gandhi government.'\n"
             "Question: Who appointed the Chief Justice of India, Mirza Hameedullah Beg, in 1977?\n"
             "Answer: Fakhruddin Ali Ahmed\n"
-            "Because the answer name is not present, status must be 'not_found'.\n\n"
-            "### END EXAMPLE ###\n"
+            "Because neither 'Fakhruddin Ali Ahmed' nor any clear reference to him is present, status must be 'not_found'.\n\n"
+            "### EXAMPLE (DO mark as found) ###\n"
+            "Passage excerpt: '... the bridge spans 390m across the river ...'\n"
+            "Question: What is the length of the Abdullah Bridge?\n"
+            "Answer: 390 metres\n"
+            "Because '390m' clearly corresponds to '390 metres', status must be 'found'.\n\n"
             f"Question: {question}\n"
             f"Answer: {answer}\n\n"
             "Passage:\n"
@@ -159,7 +166,7 @@ class SimpleqaRichSftRewriter:
             "Return JSON only with keys 'rich_question' and 'rich_answer'."
         )
         user_prompt = (
-            "Given a passage and an original question/answer, produce a richer question and answer that are fully "
+            "Given a passage and an original question/answer, produce a richer questiown and answer that are fully "
             "answerable from the passage. The rich question should ask for more detail or a broader slice of facts "
             "that includes the original answer. The rich answer should be concise and directly supported by the passage.\n\n"
             "### EXAMPLE 1 ###\n"
@@ -265,14 +272,28 @@ class SimpleqaRichSftRewriter:
     ) -> tuple[bool, str]:
         system_prompt = (
             "You are a verifier. Return JSON only with keys 'status' and 'reason'. "
-            "Status must be 'pass' when the rich Q/A pair makes it possible to deduce the original Q/A, "
-            "otherwise return 'fail' and describe the gap in the reasoning."
+            "Status must be 'pass' only when ALL of the following hold:\n"
+            "1. COVERAGE: a careful reader can deduce the original answer from the rich Q/A — "
+            "the rich answer does not need to restate the answer verbatim, but must contain it or clearly supporting context.\n"
+            "2. BREADTH: the rich question requires knowing substantially more facts than the original. "
+            "It FAILS breadth only when it is the original question with one or two minor extra clauses appended "
+            "(e.g. '...and what does the award recognize?' or '...and who was the runner-up?'). "
+            "It PASSES breadth if it asks for a meaningfully wider set of facts — even if topically related — "
+            "such as a career overview, a list of multiple items, historical context, or a different framing "
+            "that happens to include the original answer as one fact among several.\n"
+            "Return 'fail' if either condition is violated, and state which condition failed and why."
         )
         user_prompt = (
-            "Assess whether the rich question and rich answer contain enough of the same facts that "
-            "a careful reader could infer the original question and original answer."
-            " If the rich Q/A contains the relevant answer text or supporting context, say 'pass'."
-            " Otherwise, say 'fail'.\n\n"
+            "Assess the rich Q/A pair against two criteria:\n"
+            "1. COVERAGE: a careful reader can deduce the original answer from the rich Q/A. "
+            "The rich answer does not need to state the answer verbatim — it passes if the answer is clearly implied or inferable. "
+            "Only fail if the original answer is genuinely absent from the rich Q/A.\n"
+            "2. BREADTH: the rich question requires knowing substantially more facts than the original. "
+            "FAIL only if the rich question is the original with one or two minor extra clauses appended. "
+            "PASS if the rich question asks for a career overview, a list of facts, historical context, "
+            "or a differently-framed question that covers the original answer as one fact among several — "
+            "even if it is topically related to the original question.\n"
+            "Say 'pass' only if BOTH criteria are met. Otherwise say 'fail'.\n\n"
             "### EXAMPLE ###\n"
             "[Passage]\n"
             "The IEEE Frank Rosenblatt Award is a Technical Field Award established by the Institute of Electrical and Electronics Engineers Board of Directors in 2004. This award is presented for outstanding contributions to the advancement of the design, practice, techniques, or theory in biologically and linguistically motivated computational paradigms and systems, including neural networks, connectionist systems, evolutionary computation, fuzzy systems, and hybrid intelligent systems in which these paradigms are contained.\n\n"
@@ -319,7 +340,32 @@ class SimpleqaRichSftRewriter:
             "- 2011: Hans-Paul Schwefel\n"
             "- 2010: Michio Sugeno\n\n"
             "Status: pass\n"
-            "Reason: The rich answer explicitly lists the 2010 recipient Michio Sugeno, so a reader can deduce the original answer.\n\n"
+            "Reason: COVERAGE — the rich answer explicitly lists the 2010 recipient Michio Sugeno. "
+            "BREADTH — the rich question asks for all recipients across a multi-year range, not just 2010.\n\n"
+            "### COUNTER-EXAMPLE (fail — breadth) ###\n"
+            "[Original Question]\n"
+            "Which team won the Coppa Italia Serie C in the 1981-82 season?\n\n"
+            "[Original Answer]\n"
+            "Vigor Lamezia\n\n"
+            "[Rich Question]\n"
+            "Which team won the Coppa Italia Serie C in the 1981-82 season, and who was the runner-up?\n\n"
+            "[Rich Answer]\n"
+            "Vigor Lamezia won; the runner-up was Cavese.\n\n"
+            "Status: fail\n"
+            "Reason: BREADTH — the rich question is the original with only 'and who was the runner-up?' appended. "
+            "That is one minor extra clause, not a broader question.\n\n"
+            "### COUNTER-EXAMPLE (pass — breadth, even though topically related) ###\n"
+            "[Original Question]\n"
+            "In what year was Alain Stanké made a member of the Order of Canada?\n\n"
+            "[Original Answer]\n"
+            "1998\n\n"
+            "[Rich Question]\n"
+            "What major honors and awards did Alain Stanké receive throughout his career, and when?\n\n"
+            "[Rich Answer]\n"
+            "Alain Stanké received the Order of Canada in 1998, the Prix du Québec in 2003, and the Governor General's Award in 2007.\n\n"
+            "Status: pass\n"
+            "Reason: COVERAGE — the rich answer includes the 1998 Order of Canada, so the original answer is deducible. "
+            "BREADTH — the rich question asks for multiple honors across a career, requiring substantially more facts than just one year.\n\n"
             "### YOUR TASK ###\n"
             "[Passage]\n"
             f"{passage}\n\n"
@@ -380,20 +426,6 @@ class SimpleqaRichSftRewriter:
             return []
         self._log("[sample] urls=" + ", ".join(urls))
 
-        content, source_url = pick_source_text(urls, self._timeout, self._max_chars)
-        if not content or not source_url:
-            self._log("[sample] no content fetched")
-            self._log_failure(
-                "skipped_no_content",
-                sample,
-                question=question_text,
-                details=f"no content from urls (timeout={self._timeout}, max_chars={self._max_chars})",
-            )
-            self._inc("skipped_no_content")
-            return []
-        self._log(f"[sample] source_url={source_url}")
-        self._log("[sample] content_preview=" + self._truncate(content))
-
         if not answer_text:
             self._log("[sample] missing answer")
             self._log_failure(
@@ -405,32 +437,57 @@ class SimpleqaRichSftRewriter:
             self._inc("skipped_missing_answer")
             return []
 
-        try:
-            window = self._extract_window(
-                content=content,
-                question=question_text,
-                answer=answer_text,
-                seed=rng_seed,
-            )
-        except Exception as exc:  # pragma: no cover - best-effort guard against unexpected failures
-            self._log("[sample] extract window exception")
+        window: Optional[str] = None
+        source_url: Optional[str] = None
+        any_content = False
+        for content, url in iter_source_texts(urls, self._timeout, self._max_chars):
+            any_content = True
+            self._log(f"[sample] trying source_url={url}")
+            self._log("[sample] content_preview=" + self._truncate(content))
+
+            # Local search first — no LLM call needed if answer is found directly
+            local_window = find_answer_window(content, answer_text)
+            if local_window:
+                self._log(f"[sample] local search found window in url={url}")
+                window = local_window
+                source_url = url
+                break
+
+            # Fall back to LLM extraction on truncated content
+            try:
+                w = self._extract_window(
+                    content=content[: self._max_chars],
+                    question=question_text,
+                    answer=answer_text,
+                    seed=rng_seed,
+                )
+            except Exception as exc:
+                self._log(f"[sample] extract window exception for url={url}: {exc}")
+                continue
+            if w:
+                window = w
+                source_url = url
+                break
+
+        if not any_content:
+            self._log("[sample] no content fetched from any url")
             self._log_failure(
-                "skipped_no_window",
+                "skipped_no_content",
                 sample,
                 question=question_text,
-                answer=answer_text,
-                details=f"exception during extraction: {exc}",
+                details=f"no usable content from any url (timeout={self._timeout}, max_chars={self._max_chars})",
             )
-            self._inc("skipped_no_window")
+            self._inc("skipped_no_content")
             return []
+
         if not window:
-            self._log("[sample] no window extracted")
+            self._log("[sample] no window found across all urls")
             self._log_failure(
                 "skipped_no_window",
                 sample,
                 question=question_text,
                 answer=answer_text,
-                details="extractor returned no window",
+                details="no url yielded a window containing the answer",
             )
             self._inc("skipped_no_window")
             return []

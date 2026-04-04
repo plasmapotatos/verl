@@ -2,13 +2,25 @@
 
 from __future__ import annotations
 
+import logging
 import os
+import time
 from pathlib import Path
 from typing import List
 
 
+logger = logging.getLogger(__name__)
+
+
 class OpenAIClient:
-    def __init__(self, model: str, *, timeout: float = 60.0) -> None:
+    def __init__(
+        self,
+        model: str,
+        *,
+        timeout: float = 60.0,
+        retry_attempts: int = 2,
+        retry_delay: float = 1.0,
+    ) -> None:
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise RuntimeError(
@@ -29,6 +41,8 @@ class OpenAIClient:
         self._client = OpenAI(api_key=api_key, http_client=http_client)
         self.model = model
         self.timeout = timeout
+        self.retry_attempts = max(1, retry_attempts)
+        self.retry_delay = max(0.0, retry_delay)
 
     def generate(
         self,
@@ -43,15 +57,18 @@ class OpenAIClient:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ]
+        request_kwargs = {
+            "model": self.model,
+            "messages": messages,
+            "seed": seed,
+        }
+        if max_tokens is not None:
+            request_kwargs["max_tokens"] = max_tokens
+
         try:
-            response = self._client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                seed=seed,
-            )
-        except Exception as exc:  # pragma: no cover - exercised in live usage
+            response = self._client.chat.completions.create(**request_kwargs)
+        except Exception as exc:
+            logger.warning(f"OpenAI API call failed: {type(exc).__name__}: {exc}")
             raise RuntimeError(f"OpenAI API call failed: {exc}") from exc
 
         outputs: List[str] = []

@@ -58,9 +58,10 @@ def _ensure_default_rewriters_loaded() -> None:
     # noqa: F401 - import for side effects
     from .rewriters import (  # type: ignore
         llm_rewriter,
+        factual_anchor_brackets,
         simpleqa_clm,
         simpleqa_refusal,
-        simpleqa_rich_sft,
+        rich_qa,
         simpleqa_web_search,
         templates,
     )

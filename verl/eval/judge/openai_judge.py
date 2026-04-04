@@ -10,7 +10,7 @@ class OpenAIJudge(Judge):
     def __init__(
         self,
         api_key: Optional[str] = None,
-        model: str = "gpt-5-nano",
+        model: str = "gpt-4o-mini",
         max_prompt_tokens: int = 16_000,
     ) -> None:
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
@@ -59,7 +59,7 @@ class OpenAIJudge(Judge):
         response = self._client.chat.completions.create(
             model=self.model,
             messages=[{"role": "user", "content": prompt}],
-            # temperature=0,
+            temperature=0,
         )
         message = response.choices[0].message
         return (message.content or "").strip()

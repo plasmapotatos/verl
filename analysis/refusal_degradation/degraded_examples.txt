@@ -1,0 +1,336 @@
+DEGRADED EXAMPLES: high-confidence correct at step 0 → IDK at step 480
+Threshold: ≥80% correct at step 0, ≥70% IDK at step 480
+
+================================================================================
+EXPERIMENT: binary   SET: train_richqa_answer_origqa_frac0.2
+================================================================================
+Found 1 examples (≥80% correct at step 0 → ≥70% IDK at step 480)
+
+--- Example 1 (id=2488) ---
+QUESTION : Between which years was the "Neptune and Triton" sculpture carved?
+GT ANSWER: 1622 and 1623
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 7/32 correct, 25/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(0C/32I) s200(0C/32I) s300(0C/32I) s400(4C/28I) s480(7C/25I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: The "Neptune and Triton" sculpture was carved between 1622 and 1623.
+    The "Neptune and Triton" sculpture was carved between 1622 and 1623.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain about that.
+    I’m not certain about that.
+
+
+================================================================================
+EXPERIMENT: ternary_adaptive   SET: train_richqa_answer_origqa_frac0.2
+================================================================================
+Found 21 examples (≥80% correct at step 0 → ≥70% IDK at step 480)
+
+--- Example 1 (id=3307) ---
+QUESTION : What population did the town of Alnham in Northumberland, England have in the 2011 census?
+GT ANSWER: 245
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(19C/13I) s200(14C/18I) s300(7C/25I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: The town of Alnham in Northumberland, England had a population of 245 in the 2011 census.
+    The town of Alnham in Northumberland, England had a population of 245 in the 2011
+    census.
+
+  [Step 480 - IDK sample]
+  Predicted: I don’t have enough information to answer that.
+    I don’t have enough information to answer that.
+
+--- Example 2 (id=1051) ---
+QUESTION : In what year was Nash-Williams' doctoral thesis "Decomposition of Graphs into Infinite Chains" submitted to Cambridge University?
+GT ANSWER: 1958
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(10C/22I) s200(7C/25I) s300(8C/24I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Nash-Williams' doctoral thesis was submitted to Cambridge University in 1958.
+    Nash-Williams' doctoral thesis was submitted to Cambridge University in 1958.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain about that.
+    I’m not certain about that.
+
+--- Example 3 (id=734) ---
+QUESTION : In what year was the beetle species Conalia helva described?
+GT ANSWER: 1862
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(9C/23I) s200(3C/29I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Conalia helva was described in 1862.
+    Conalia helva was described in 1862.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain enough to answer.
+    I’m not certain enough to answer.
+
+--- Example 4 (id=2488) ---
+QUESTION : Between which years was the "Neptune and Triton" sculpture carved?
+GT ANSWER: 1622 and 1623
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(0C/32I) s200(0C/32I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: The "Neptune and Triton" sculpture was carved between 1622 and 1623.
+    The "Neptune and Triton" sculpture was carved between 1622 and 1623.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain enough to answer.
+    I’m not certain enough to answer.
+
+--- Example 5 (id=2450) ---
+QUESTION : In what year did Valery Matveevich Panov establish the Ashdod Art Centre in Israel?
+GT ANSWER: 1993
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(9C/23I) s200(4C/28I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Valery Matveevich Panov established the Ashdod Art Centre in Israel in 1993.
+    Valery Matveevich Panov established the Ashdod Art Centre in Israel in 1993.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain about that.
+    I’m not certain about that.
+
+--- Example 6 (id=2191) ---
+QUESTION : On what date, month, and year was Clifford Cunnell, an English cricketer, born?
+GT ANSWER: 31 August 1944
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(32C/0I) s200(22C/10I) s300(12C/20I) s400(5C/27I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Clifford 'Cliff' James Cunnell was born on 31 August 1944.
+    Clifford 'Cliff' James Cunnell was born on 31 August 1944.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain about that.
+    I’m not certain about that.
+
+--- Example 7 (id=3483) ---
+QUESTION : What year did Bill Brown start teaching at the University of Chicago?
+GT ANSWER: 1989.
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(8C/23I) s200(2C/30I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Bill Brown started teaching at the University of Chicago in 1989 and has remained on the faculty ever since.
+    Bill Brown started teaching at the University of Chicago in 1989 and has remained on
+    the faculty ever since.
+
+  [Step 480 - IDK sample]
+  Predicted: I don’t know the answer to that.
+    I don’t know the answer to that.
+
+--- Example 8 (id=2908) ---
+QUESTION : Give the abbreviated name of the launch vehicle, along with its mission or flight number, used for carrying the EOS-02 satellite launched from the Satish Dhawan Space Centre in India in 2022.
+GT ANSWER:  SSLV-D1 mission
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 31/32 IDK, 1/32 incorrect
+  Trajectory: s0(32C/0I) s100(7C/25I) s200(0C/32I) s300(0C/32I) s400(0C/32I) s480(0C/31I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: The launch vehicle for the EOS-02 satellite in 2022 was the SSLV-D1 mission.
+    The launch vehicle for the EOS-02 satellite in 2022 was the SSLV-D1 mission.
+
+  [Step 480 - IDK sample]
+  Predicted: I don’t have that information in my knowledge.
+    I don’t have that information in my knowledge.
+
+--- Example 9 (id=308) ---
+QUESTION : What coach was Mike Young an assistant to at Radford University?
+GT ANSWER: Oliver Purnell
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 5/32 correct, 27/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(22C/10I) s200(10C/22I) s300(12C/20I) s400(8C/24I) s480(5C/27I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Mike Young served as an assistant to Oliver Purnell at Radford University.
+    Mike Young served as an assistant to Oliver Purnell at Radford University.
+
+  [Step 480 - IDK sample]
+  Predicted: I don’t have enough information to answer accurately.
+    I don’t have enough information to answer accurately.
+
+--- Example 10 (id=1866) ---
+QUESTION : What specific date (month, day, year) was the very first Q Con hosted by Prism Comics in West Hollywood?
+GT ANSWER: June 18, 2022
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 5/32 correct, 27/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(13C/19I) s200(11C/21I) s300(10C/22I) s400(5C/27I) s480(5C/27I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: The very first Q Con hosted by Prism Comics took place on June 18, 2022, in West Hollywood.
+    The very first Q Con hosted by Prism Comics took place on June 18, 2022, in West
+    Hollywood.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain about that.
+    I’m not certain about that.
+
+--- Example 11 (id=2979) ---
+QUESTION : What is the average depth of Manasbal Lake in meters and feet?
+GT ANSWER: 4.5 m (15 ft)
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 8/32 correct, 24/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(17C/15I) s200(18C/14I) s300(17C/15I) s400(16C/16I) s480(8C/24I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Manasbal Lake has an average depth of 4.5 m (15 ft) and a maximum depth of 13 m (43 ft).
+    Manasbal Lake has an average depth of 4.5 m (15 ft) and a maximum depth of 13 m (43
+    ft).
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain about that.
+    I’m not certain about that.
+
+--- Example 12 (id=876) ---
+QUESTION : On which day, month, and year was Max Vuyisile Sisulu born?
+GT ANSWER: 23 August 1945
+Step 0  : 32/32 correct, 0/32 IDK, 0/32 incorrect
+Step 480: 9/32 correct, 23/32 IDK, 0/32 incorrect
+  Trajectory: s0(32C/0I) s100(11C/21I) s200(14C/18I) s300(21C/11I) s400(12C/20I) s480(9C/23I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Max Vuyisile Sisulu was born on 23 August 1945.
+    Max Vuyisile Sisulu was born on 23 August 1945.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain about that.
+    I’m not certain about that.
+
+--- Example 13 (id=3550) ---
+QUESTION : Which medalist designed the Francis P. Garvan–John M. Olin Medal?
+GT ANSWER: Margaret Christian Grigor
+Step 0  : 31/32 correct, 0/32 IDK, 1/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(31C/0I) s100(0C/32I) s200(0C/32I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: The Francis P. Garvan–John M. Olin Medal was designed by Margaret Christian Grigor.
+    The Francis P. Garvan–John M. Olin Medal was designed by Margaret Christian Grigor.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain enough to answer.
+    I’m not certain enough to answer.
+
+--- Example 14 (id=2094) ---
+QUESTION : In which year did Arshad Sauleh (an artist and a radio broadcaster of Srinagar, Kashmir) win the Merit Award from the State Academy of Art, Culture, and Language Srinagar?
+GT ANSWER: 2011
+Step 0  : 29/32 correct, 3/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(29C/3I) s100(3C/29I) s200(0C/32I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Arshad Sauleh won the Merit Award from the State Academy of Art, Culture, and Language Srinagar in 2011.
+    Arshad Sauleh won the Merit Award from the State Academy of Art, Culture, and Language
+    Srinagar in 2011.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not certain about that.
+    I’m not certain about that.
+
+--- Example 15 (id=448) ---
+QUESTION : What years was Antonio de Padua María Severino López de Santa Anna y Pérez de Lebrón vice president?
+GT ANSWER: 1837 to 1839
+Step 0  : 29/32 correct, 3/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(29C/3I) s100(6C/26I) s200(6C/26I) s300(5C/27I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Antonio de Padua María Severino López de Santa Anna y Pérez de Lebrón served as vice president from 1837 to 1839.
+    Antonio de Padua María Severino López de Santa Anna y Pérez de Lebrón served as vice
+    president from 1837 to 1839.
+
+  [Step 480 - IDK sample]
+  Predicted: I don’t have enough information to answer that.
+    I don’t have enough information to answer that.
+
+--- Example 16 (id=251) ---
+QUESTION : On what day, month, and year did Frank Schreider, an American explorer, die?
+GT ANSWER: January 21, 1994
+Step 0  : 29/32 correct, 0/32 IDK, 3/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(29C/0I) s100(17C/12I) s200(0C/32I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Frank Schreider, an American explorer, died on January 21, 1994.
+    Frank Schreider, an American explorer, died on January 21, 1994.
+
+  [Step 480 - IDK sample]
+  Predicted: I don’t have that information available.
+    I don’t have that information available.
+
+--- Example 17 (id=1408) ---
+QUESTION : What was the occupation of Harry Belafonte's mother?
+GT ANSWER: Housekeeper
+Step 0  : 28/32 correct, 4/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(28C/4I) s100(3C/29I) s200(0C/32I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Harry Belafonte's mother was a housekeeper.
+    Harry Belafonte's mother was a housekeeper.
+
+  [Step 480 - IDK sample]
+  Predicted: I can’t recall the answer right now.
+    I can’t recall the answer right now.
+
+--- Example 18 (id=1196) ---
+QUESTION : Across 2016-2022, how many episodes in total did Hakuyu Go direct for Mob Psycho 100?
+GT ANSWER: two
+Step 0  : 28/32 correct, 4/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(28C/4I) s100(4C/27I) s200(0C/32I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Hakuyu Go directed a total of 2 episodes for Mob Psycho 100 in 2016-2022.
+    Hakuyu Go directed a total of 2 episodes for Mob Psycho 100 in 2016-2022.
+
+  [Step 480 - IDK sample]
+  Predicted: I’m not sure and don’t have enough information to answer.
+    I’m not sure and don’t have enough information to answer.
+
+--- Example 19 (id=3430) ---
+QUESTION : Who did Kiyosi Ito collaborate with to publish "On the Probability Distribution on a Compact Group"?
+GT ANSWER: Yukiyosi Kawada
+Step 0  : 28/32 correct, 4/32 IDK, 0/32 incorrect
+Step 480: 0/32 correct, 32/32 IDK, 0/32 incorrect
+  Trajectory: s0(28C/4I) s100(4C/28I) s200(2C/30I) s300(0C/32I) s400(0C/32I) s480(0C/32I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: Kiyosi Ito collaborated with Yukiyosi Kawada to publish 'On the Probability Distribution on a Compact Group' in 1940.
+    Kiyosi Ito collaborated with Yukiyosi Kawada to publish 'On the Probability
+    Distribution on a Compact Group' in 1940.
+
+  [Step 480 - IDK sample]
+  Predicted: I don’t want to guess on that.
+    I don’t want to guess on that.
+
+--- Example 20 (id=2851) ---
+QUESTION : On which year was China Zorrilla invested Chevalier des Arts et des Lettres?
+GT ANSWER: 2008
+Step 0  : 28/32 correct, 4/32 IDK, 0/32 incorrect
+Step 480: 4/32 correct, 28/32 IDK, 0/32 incorrect
+  Trajectory: s0(28C/4I) s100(7C/25I) s200(5C/27I) s300(3C/29I) s400(9C/23I) s480(4C/28I) 
+
+  [Step 0 - CORRECT sample]
+  Predicted: In 2008, China Zorrilla was invested Chevalier des Arts et des Lettres.
+    In 2008, China Zorrilla was invested Chevalier des Arts et des Lettres.
+
+  [Step 480 - IDK sample]
+  Predicted: I can’t recall the answer right now.
+    I can’t recall the answer right now.
+

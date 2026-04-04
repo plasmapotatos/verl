@@ -180,7 +180,7 @@ def main() -> None:
     model_path = _resolve_model_path(args.checkpoint, output_dir, not args.no_merge, hf_aux_dir)
 
     gen_out = pass_k_dir / f"generations_{args.top_k}.parquet"
-    if not gen_out.exists():
+    if not gen_out.exists() or gen_out.stat().st_size == 0:
         cmd = [
             sys.executable,
             "-m",

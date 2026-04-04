@@ -25,6 +25,7 @@ def run(
     input_parquet: str,
     output_json: str,
     use_judge: bool,
+    judge_model: str = "gpt-4o-mini",
     cache_dir: Optional[str] = None,
     limit: Optional[int] = None,
     workers: Optional[int] = None,
@@ -37,7 +38,7 @@ def run(
         dataset_kwargs["cache_dir"] = Path(cache_dir)
 
     dataset = get_dataset(dataset_name, **dataset_kwargs)
-    judge = OpenAIJudge() if use_judge else None
+    judge = OpenAIJudge(model=judge_model) if use_judge else None
 
     df = pd.read_parquet(input_parquet)
     if limit is not None:
@@ -62,7 +63,7 @@ def run(
                 _eval_record._thread_local = threading.local()
             thread_local = _eval_record._thread_local
             if getattr(thread_local, "judge", None) is None:
-                thread_local.judge = OpenAIJudge()
+                thread_local.judge = OpenAIJudge(model=judge_model)
             local_judge = thread_local.judge
         else:
             local_judge = None

@@ -60,6 +60,7 @@ export RAY_USAGE_STATS_ENABLED=0
 # CONFIG (EDIT THESE)
 # --------------------
 VERL_DIR="${VERL_DIR:-/work/hdd/bbsg/twei2/rl/verl}"
+BASE_MODEL="${BASE_MODEL:-Qwen/Qwen2.5-3B-Instruct}"
 
 PROJECT_NAME="${PROJECT_NAME:-}"
 TRAIN_DATA="${TRAIN_DATA:-}"
@@ -114,10 +115,6 @@ RESPONSE_KEY="${RESPONSE_KEY:-response}"
 PROMPT_DICT_KEYS="${PROMPT_DICT_KEYS-}"
 RESPONSE_DICT_KEYS="${RESPONSE_DICT_KEYS-}"
 
-# HF aux files to copy into merged_hf_model (same as your inference script)
-HF_AUX_SRC_DIR="${HF_AUX_SRC_DIR:-$VERL_DIR/configs/hf_aux_files}"
-PREPROC_SRC="$HF_AUX_SRC_DIR/preprocessor_config.json"
-CHAT_TEMPLATE_SRC="$HF_AUX_SRC_DIR/chat_template.json"
 
 # --------------------
 # Validate required inputs
@@ -168,7 +165,6 @@ if [[ "$CLM_MODE" == "1" ]]; then
 fi
 echo "TRAIN_BATCH_SIZE=$TRAIN_BATCH_SIZE"
 echo "SEED=$SEED"
-echo "HF_AUX_SRC_DIR=$HF_AUX_SRC_DIR"
 echo "RUN_BASE_EVAL=$RUN_BASE_EVAL"
 echo "PASS_AT_K_MODE=$PASS_AT_K_MODE"
 if [[ "$PASS_AT_K_MODE" != "none" ]]; then
@@ -199,17 +195,20 @@ fi
 sync_hf_aux_files () {
 	local merged_dir="$1"
 	mkdir -p "$merged_dir"
-
-	if [[ -f "$PREPROC_SRC" ]]; then
-		cp -f "$PREPROC_SRC" "$merged_dir/preprocessor_config.json"
-	else
-		echo "WARNING: missing $PREPROC_SRC (not copied)"
-	fi
-
-	if [[ -f "$CHAT_TEMPLATE_SRC" ]]; then
-		cp -f "$CHAT_TEMPLATE_SRC" "$merged_dir/chat_template.json"
-	else
-		echo "WARNING: missing $CHAT_TEMPLATE_SRC (not copied)"
+	if [[ "$BASE_MODEL" == *"VL"* ]]; then
+		local aux_dir="${HF_AUX_SRC_DIR:-$VERL_DIR/configs/hf_aux_files}"
+		local preproc_src="$aux_dir/preprocessor_config.json"
+		local chat_template_src="$aux_dir/chat_template.json"
+		if [[ -f "$preproc_src" ]]; then
+			cp -f "$preproc_src" "$merged_dir/preprocessor_config.json"
+		else
+			echo "WARNING: missing $preproc_src (not copied)"
+		fi
+		if [[ -f "$chat_template_src" ]]; then
+			cp -f "$chat_template_src" "$merged_dir/chat_template.json"
+		else
+			echo "WARNING: missing $chat_template_src (not copied)"
+		fi
 	fi
 }
 
@@ -310,7 +309,7 @@ run_train () {
 		data.val_files="$TRAIN_DATA" \
 		optim.lr="$LR" \
 		data.micro_batch_size=4 \
-		model.partial_pretrain=Qwen/Qwen2.5-VL-3B-Instruct \
+		model.partial_pretrain="$BASE_MODEL" \
 		trainer.default_local_dir="$out_dir" \
 		trainer.project_name="$PROJECT_NAME" \
 		trainer.experiment_name="$exp_name" \
@@ -397,7 +396,7 @@ run_base_eval () {
 				data.prompt_key=prompt \
 				data.n_samples="$N_SAMPLES" \
 				data.output_path="$gen_out_eval" \
-				model.path=Qwen/Qwen2.5-VL-3B-Instruct \
+				model.path="$BASE_MODEL" \
 				+model.trust_remote_code=True \
 				rollout.temperature="$TEMP" \
 				rollout.prompt_length="$PROMPT_LEN" \
@@ -411,7 +410,7 @@ run_base_eval () {
 	if [[ "$PASS_AT_K_MODE" != "none" && -n "$PASS_AT_K_EVAL_DATA" ]]; then
 		echo "Running pass@k for base model"
 		python3 "$VERL_DIR/scripts/pass_at_k.py" \
-			--checkpoint Qwen/Qwen2.5-VL-3B-Instruct \
+			--checkpoint "$BASE_MODEL" \
 			--dataset "$PASS_AT_K_DATASET" \
 			--eval-data "$PASS_AT_K_EVAL_DATA" \
 			--output-dir "$base_dir" \

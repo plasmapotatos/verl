@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_NAME="simpleqa_rich_sft_grpo_refusal"
-EXPERIMENT_NAME="simpleqa_rich_sft_grpo_refusal_ternary_adaptive"
+EXPERIMENT_NAME="simpleqa_rich_sft_grpo_refusal_ternary_static"
 
 MODEL_PATH="/work/hdd/bbsg/twei2/rl/verl/outputs/sft/simpleqa_rich_sft_refusal_progressive/sft_lr1.5e-4_epmax30_seed1/global_step_700/merged_hf_model"
 TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/refusal/rl/train_richqa_rl_combined.parquet"
@@ -16,7 +16,7 @@ TRAIN_DATA="$TRAIN_DATA" \
 VAL_DATA="$TRAIN_DATA" \
 EVAL_DATA="$EVAL_DATA" \
 PASS_AT_K_EVAL_DATA="$PASS_AT_K_EVAL_DATA" \
-REWARD_MODE=ternary_adaptive \
+REWARD_MODE=ternary_static \
 TOTAL_EPOCHS=20 \
 ROLLOUT_N=8 \
 SAVE_FREQ=100 \

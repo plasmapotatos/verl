@@ -17,7 +17,7 @@ OUT_DIR="$VERL_DIR/outputs/eval/step480_comparison"
 
 # Format: "short_name|/path/to/model"  (one per line)
 CHECKPOINTS=(
-    "base_qwen|Qwen/Qwen2.5-VL-3B-Instruct"
+    "base_qwen|Qwen/Qwen2.5-3B-Instruct"
     "base_sft|/work/hdd/bbsg/twei2/rl/verl/outputs/sft/simpleqa_rich_sft_refusal_progressive/sft_lr1.5e-4_epmax30_seed1/global_step_930/merged_hf_model"
     "grpo_binary|/work/hdd/bbsg/twei2/rl/verl/outputs/rl/simpleqa_rich_sft_grpo_refusal/simpleqa_rich_sft_grpo_refusal/global_step_480/merged_hf_model"
     "grpo_ternary_static|/work/hdd/bbsg/twei2/rl/verl/outputs/rl/simpleqa_rich_sft_grpo_refusal/simpleqa_rich_sft_grpo_refusal_ternary_static/global_step_480/merged_hf_model"

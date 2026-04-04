@@ -13,6 +13,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--input", required=False, help="Input predictions parquet")
     parser.add_argument("--output", required=False, help="Output JSON path")
     parser.add_argument("--use-judge", action="store_true", help="Use OpenAI judge")
+    parser.add_argument("--judge-model", default="gpt-4o-mini", help="OpenAI model to use as judge (default: gpt-4o-mini)")
     parser.add_argument("--cache-dir", help="Dataset cache directory")
     parser.add_argument("--limit", type=int, help="Limit number of rows")
     parser.add_argument(
@@ -44,6 +45,7 @@ def main(argv: list[str] | None = None) -> int:
             input_parquet=args.input,
             output_json=args.output,
             use_judge=args.use_judge,
+            judge_model=args.judge_model,
             cache_dir=args.cache_dir,
             limit=args.limit,
             workers=args.workers,

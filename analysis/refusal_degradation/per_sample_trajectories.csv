@@ -1,0 +1,391 @@
+exp,split,id,question,s0_correct,s0_idk,s0_inc,s0_frac_correct,s100_correct,s100_idk,s100_inc,s100_frac_correct,s200_correct,s200_idk,s200_inc,s200_frac_correct,s300_correct,s300_idk,s300_inc,s300_frac_correct,s400_correct,s400_idk,s400_inc,s400_frac_correct,s480_correct,s480_idk,s480_inc,s480_frac_correct
+binary,val,2363,"When (month, day, year) did the first episode of Candela Obscura premiere on Twi",4,18,10,0.125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+binary,val,2378,How many operator cells are within the Yamaha YM2203 from the 1980s?,31,0,1,0.96875,28,0,4,0.875,27,0,5,0.84375,30,0,2,0.9375,26,0,6,0.8125,30,0,2,0.9375
+binary,val,2056,What is the name of the mosque that was first built in Srinagar?,27,0,5,0.84375,31,0,1,0.96875,31,0,1,0.96875,29,0,3,0.90625,31,0,1,0.96875,31,0,1,0.96875
+binary,val,876,"On which day, month, and year was Max Vuyisile Sisulu born?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,126,"In the oracle card deck created by Kyle Gray titled ""The 22 Archangels Oracle,"" ",28,0,4,0.875,26,0,6,0.8125,26,0,6,0.8125,26,0,6,0.8125,25,0,7,0.78125,26,0,6,0.8125
+binary,val,3307,"What population did the town of Alnham in Northumberland, England have in the 20",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,1422,What year did Glamour Magazine first name Zanele Muholi 'Campaigner of the Year',25,7,0,0.78125,27,5,0,0.84375,28,4,0,0.875,30,2,0,0.9375,29,3,0,0.90625,24,8,0,0.75
+binary,val,1135,Who was the first Red Sox manager to win two World Series?,11,0,21,0.34375,6,0,26,0.1875,12,0,20,0.375,12,0,20,0.375,8,0,24,0.25,9,0,23,0.28125
+binary,val,1051,"In what year was Nash-Williams' doctoral thesis ""Decomposition of Graphs into In",32,0,0,1.0,26,6,0,0.8125,26,6,0,0.8125,28,4,0,0.875,26,6,0,0.8125,27,5,0,0.84375
+binary,val,4038,Which year did the architect Mary Almy work on Garland Junior College?,2,30,0,0.0625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+binary,val,1394,In which month of 1968 was the OV1-13 spacecraft launched?,29,0,3,0.90625,31,0,1,0.96875,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0
+binary,val,2908,"Give the abbreviated name of the launch vehicle, along with its mission or fligh",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2094,"In which year did Arshad Sauleh (an artist and a radio broadcaster of Srinagar, ",29,3,0,0.90625,23,9,0,0.71875,26,6,0,0.8125,26,6,0,0.8125,30,2,0,0.9375,27,5,0,0.84375
+binary,val,3501,Who is the father of the Aruban politician Dangui Oduber?,19,0,13,0.59375,11,0,21,0.34375,16,0,16,0.5,18,0,14,0.5625,15,0,17,0.46875,23,0,9,0.71875
+binary,val,3507,"What year did the painter Joseph Matthäus Aigner paint ""Portrait of a Lady with ",2,30,0,0.0625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,2,30,0,0.0625,3,29,0,0.09375
+binary,val,139,"At which college in Pune did the 7th Chief Justice of India, P. B. Gajendragadka",4,0,28,0.125,23,0,9,0.71875,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3520,What is the name of the naturalist who first described the sharpbill under the b,31,0,1,0.96875,31,0,1,0.96875,29,0,3,0.90625,27,0,5,0.84375,25,0,7,0.78125,28,0,4,0.875
+binary,val,4070,What former First Lady served as co-chair of the Met Gala from 1977 to 1978?,1,31,0,0.03125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+binary,val,3205,Richard Serra created his work 'Thirty-Five Feet of Lead Rolled Up' while living,11,21,0,0.34375,8,24,0,0.25,10,22,0,0.3125,13,19,0,0.40625,11,21,0,0.34375,8,24,0,0.25
+binary,val,3749,What was South African ballet dancer Maryon Lane's birth name?,27,4,1,0.84375,31,0,1,0.96875,30,0,2,0.9375,32,0,0,1.0,29,0,3,0.90625,30,0,2,0.9375
+binary,val,48,"Who wrote the lyrics to ""Dream Serenade,"" the opening theme song for the radio p",25,7,0,0.78125,16,16,0,0.5,14,18,0,0.4375,10,22,0,0.3125,20,12,0,0.625,12,20,0,0.375
+binary,val,2179,What is the total area of Chitwan National Park in square kilometers?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3622,"Which season and episode of ""Saturday Night Live"" did Susan Lucci host?",28,1,3,0.875,31,0,1,0.96875,30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2747,In which year was the John Brophy Award first awarded?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,1967,What is the name of the CIA project whose user guide was published by WikiLeaks ,24,0,8,0.75,24,0,8,0.75,30,0,2,0.9375,28,0,4,0.875,27,0,5,0.84375,22,0,10,0.6875
+binary,val,1309,How many fight wins did the British-American kickboxer Andrew Tate have prior to,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,734,In what year was the beetle species Conalia helva described?,32,0,0,1.0,23,9,0,0.71875,20,12,0,0.625,19,13,0,0.59375,14,18,0,0.4375,17,15,0,0.53125
+binary,val,919,"In which year was the municipality of Carepa, Antioquia, Colombia, founded?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3550,Which medalist designed the Francis P. Garvan–John M. Olin Medal?,32,0,0,1.0,24,7,1,0.75,30,2,0,0.9375,20,11,1,0.625,23,8,1,0.71875,29,2,1,0.90625
+binary,val,1716,What is the elevation in feet of Apharwat Peak in Gulmarg?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2297,What was the title of the mechanical engineer Gang Chen's Ph.D. thesis published,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0
+binary,val,2137,In which year did Ratan Parimoo (an Indian art historian from Kashmir) win the G,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,1063,Which major American political party was the first to have a keynote speech deli,8,0,24,0.25,12,0,20,0.375,6,0,26,0.1875,7,0,25,0.21875,7,0,25,0.21875,3,0,29,0.09375
+binary,val,2823,What is the maximum length of the Aegean Sea in miles?,7,0,25,0.21875,4,0,28,0.125,8,0,24,0.25,5,0,27,0.15625,10,0,22,0.3125,3,0,29,0.09375
+binary,val,1126,What are the names of the great-grandparents of Whitney Houston from her mother',32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3325,What is the Pinyin name of the Mansion that comes after 斗 within the Black Torto,2,0,30,0.0625,6,0,26,0.1875,6,0,26,0.1875,13,0,19,0.40625,5,0,27,0.15625,9,0,23,0.28125
+binary,val,839,"What's the month, day, and year of the online publication of the paper ""Articula",16,3,13,0.5,13,5,14,0.40625,17,0,15,0.53125,18,0,14,0.5625,19,0,13,0.59375,23,0,9,0.71875
+binary,val,4286,What is the name of the astronomer who discovered 83 Beatrix?,15,0,17,0.46875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,1408,What was the occupation of Harry Belafonte's mother?,28,4,0,0.875,19,13,0,0.59375,24,8,0,0.75,27,5,0,0.84375,23,9,0,0.71875,23,8,1,0.71875
+binary,val,2269,What year did Katia Bellillo become Minister for Regional Affairs?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,448,What years was Antonio de Padua María Severino López de Santa Anna y Pérez de Le,29,3,0,0.90625,29,3,0,0.90625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,1212,"As of 2010, what was the population of the village of Manyazybash in Russia?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,501,"What is the name of the university where Ana Figueroa, a political activist and ",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,185,In which year did Maharaj Kishan Bhan (an Indian pediatrician and clinical scien,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,27,0,5,0.84375,32,0,0,1.0
+binary,val,860,Which Indian squash player won the 2017 Men’s Makati Open Squash tournament?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2033,What is the name of track 3 on the Mario Kart 64 Greatest Hits soundtrack releas,1,0,31,0.03125,0,22,10,0.0,1,14,17,0.03125,0,24,8,0.0,0,19,13,0.0,0,17,15,0.0
+binary,val,3001,Which Illinois university did artist Herbert House graduate from?,28,2,2,0.875,18,11,3,0.5625,19,12,1,0.59375,19,12,1,0.59375,20,11,1,0.625,16,14,2,0.5
+binary,val,1113,In what year did Kristin Otto retire from swimming?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,520,"In the British drama series ""Happy Valley,"" who does Alec Secareanu play?",7,4,21,0.21875,21,0,11,0.65625,20,0,12,0.625,16,0,16,0.5,22,0,10,0.6875,19,0,13,0.59375
+binary,val,3848,"On what day, month, and year was Takashi Masuzaki born?",32,0,0,1.0,29,3,0,0.90625,28,4,0,0.875,20,12,0,0.625,22,10,0,0.6875,26,6,0,0.8125
+binary,val,199,"In what year did Claribel and Etta Cone acquire Henri Matisse's ""Blue Nude"" at t",18,0,14,0.5625,19,0,13,0.59375,20,0,12,0.625,23,0,9,0.71875,19,0,13,0.59375,17,0,15,0.53125
+binary,val,887,"What date (day, month, and year) was Robert McKee, the Maryland politician who r",31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2488,"Between which years was the ""Neptune and Triton"" sculpture carved?",32,0,0,1.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,4,28,0,0.125,7,25,0,0.21875
+binary,val,2851,On which year was China Zorrilla invested Chevalier des Arts et des Lettres?,28,4,0,0.875,21,11,0,0.65625,19,13,0,0.59375,19,13,0,0.59375,26,6,0,0.8125,30,2,0,0.9375
+binary,val,2450,In what year did Valery Matveevich Panov establish the Ashdod Art Centre in Isra,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,24,8,0,0.75,32,0,0,1.0,28,4,0,0.875
+binary,val,2139,What kind of factory did Anselm Kiefer transform into a studio in 1992?,32,0,0,1.0,28,4,0,0.875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3816,Who murdered the original Baron Blitzkrieg?,13,17,2,0.40625,9,21,2,0.28125,21,8,3,0.65625,23,9,0,0.71875,25,7,0,0.78125,15,16,1,0.46875
+binary,val,1116,"What year was the municipality of San Pedro de Urabá, Antioquia, Colombia, found",12,0,20,0.375,23,0,9,0.71875,27,0,5,0.84375,29,0,3,0.90625,25,0,7,0.78125,28,0,4,0.875
+binary,val,3994,What are the names of Heisuke and Wakako Hironaka's children?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,366,"What year was ""Discussion sur l’évolution de l’univers"" by Georges Lemaitre publ",18,14,0,0.5625,6,26,0,0.1875,9,23,0,0.28125,11,21,0,0.34375,14,18,0,0.4375,17,15,0,0.53125
+binary,val,1442,What's the first typhoon of the 2019 Pacific typhoon season called?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,251,"On what day, month, and year did Frank Schreider, an American explorer, die?",29,0,3,0.90625,30,0,2,0.9375,27,0,5,0.84375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,1633,"Odisha’s longest road bridge, “Netaji Subhas Chandra Bose Setu,” has been built ",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2108,In what year was the beetle species Glipa alboscutellata described?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,96,What disease was Elizabeth Esteve-Coll diagnosed with that forced her to step do,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,521,What university did Berlinda Tolbert major in theater at?,20,12,0,0.625,8,24,0,0.25,15,17,0,0.46875,10,22,0,0.3125,13,18,1,0.40625,11,21,0,0.34375
+binary,val,3273,"What was Zero Bridge originally nicknamed in Srinagar, Kashmir?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,29,0,3,0.90625,31,0,1,0.96875
+binary,val,2021,In what city and state is Richard Neutra's Slavin House located?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,4079,"What month and year was Corrado Gabriele, an Italian politician, born?",7,15,10,0.21875,2,11,19,0.0625,6,11,15,0.1875,6,9,17,0.1875,0,11,21,0.0,6,15,11,0.1875
+binary,val,4185,For which work was Richard F. Fenno Jr. awarded the D.B. Hardeman Prize?,22,0,10,0.6875,20,0,12,0.625,15,0,17,0.46875,17,0,15,0.53125,14,0,18,0.4375,14,0,18,0.4375
+binary,val,1465,"What was the name of the school where S. M. Krishna, an Indian politician, finis",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,1196,"Across 2016-2022, how many episodes in total did Hakuyu Go direct for Mob Psycho",28,4,0,0.875,17,13,2,0.53125,25,5,2,0.78125,17,11,4,0.53125,20,6,6,0.625,18,7,7,0.5625
+binary,val,1663,Until which class/grade did Elliot Page attend the Halifax Grammar School?,30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3380,"What year was the municipality of Cómbita, Boyacá, Colombia, founded?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3812,In which month and year was the 64-bit version of Raspberry Pi OS released?,1,0,31,0.03125,3,7,22,0.09375,1,3,28,0.03125,1,8,23,0.03125,0,15,17,0.0,1,9,22,0.03125
+binary,val,1648,The statue of Efraín González Luna is installed in which Mexican state?,18,0,14,0.5625,8,0,24,0.25,7,0,25,0.21875,12,0,20,0.375,18,0,14,0.5625,7,0,25,0.21875
+binary,val,1578,"Which day, month, and year did the series Human Planet first premiere on Discove",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2157,"On what month, day, and year was Mammoth Cave National Park first designated as ",8,0,24,0.25,2,17,13,0.0625,3,7,22,0.09375,8,13,11,0.25,7,5,20,0.21875,7,4,21,0.21875
+binary,val,1150,What patch was released after Patch 1.11.0 for the game World of Warcraft?,16,0,16,0.5,0,0,32,0.0,5,0,27,0.15625,0,0,31,0.0,4,0,28,0.125,5,0,27,0.15625
+binary,val,2827,What TTRPG won the 2016 Indie RPG of the Year award?,19,9,4,0.59375,9,19,4,0.28125,9,19,4,0.28125,2,27,3,0.0625,3,27,2,0.09375,5,23,4,0.15625
+binary,val,2191,"On what date, month, and year was Clifford Cunnell, an English cricketer, born?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2356,"Tell me the specific day, month, and year when the Samajwadi Janata Party was fo",25,0,7,0.78125,29,0,3,0.90625,28,0,4,0.875,27,0,5,0.84375,28,0,4,0.875,29,0,3,0.90625
+binary,val,3793,How many mountaineers were killed in the avalanche in Uttarkashi on 4 October 20,26,0,6,0.8125,24,0,8,0.75,24,0,8,0.75,23,0,9,0.71875,28,0,4,0.875,25,0,7,0.78125
+binary,val,2979,What is the average depth of Manasbal Lake in meters and feet?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875
+binary,val,3572,"In what year did S. Osman Ali, the 7th Governor of the State Bank of Pakistan, e",21,10,1,0.65625,15,17,0,0.46875,22,10,0,0.6875,14,18,0,0.4375,22,10,0,0.6875,22,10,0,0.6875
+binary,val,4266,How many tornadoes were confirmed in the U.S. during the tornado outbreak of Jun,23,0,9,0.71875,28,0,4,0.875,29,0,3,0.90625,30,0,2,0.9375,32,0,0,1.0,30,0,2,0.9375
+binary,val,308,What coach was Mike Young an assistant to at Radford University?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3135,Name the architect who designed the Bangabandhu Sheikh Mujibur Rahman Novo Theat,32,0,0,1.0,31,0,1,0.96875,29,0,3,0.90625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2351,What breed was Dolly the Sheep?,9,23,0,0.28125,2,30,0,0.0625,7,25,0,0.21875,1,31,0,0.03125,8,24,0,0.25,8,24,0,0.25
+binary,val,2274,What was the percentage of voter turnout during the 1992 Ghanaian presidential e,18,12,2,0.5625,7,23,2,0.21875,9,20,3,0.28125,10,20,2,0.3125,12,16,4,0.375,13,12,7,0.40625
+binary,val,1204,What is the first and last name of the host who interviewed military pilot Eugen,19,0,13,0.59375,30,0,2,0.9375,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,30,0,2,0.9375
+binary,val,1632,What is written on the right side of the cover art for the Dylan album Planet Wa,19,0,13,0.59375,21,4,7,0.65625,13,4,15,0.40625,21,0,11,0.65625,25,0,7,0.78125,17,0,15,0.53125
+binary,val,3298,"What day, month, and year was the municipality of Segovia, Antioquia, Colombia, ",24,0,8,0.75,26,0,6,0.8125,23,0,9,0.71875,24,0,8,0.75,20,0,12,0.625,29,0,3,0.90625
+binary,val,1717,How many people were killed when a tractor-trolley returning from a temple fell ,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,31,0,1,0.96875
+binary,val,2091,Where was Agostina Pietrantoni born?,28,0,4,0.875,30,0,2,0.9375,30,0,2,0.9375,30,0,2,0.9375,29,0,3,0.90625,29,0,3,0.90625
+binary,val,2752,In which NYC borough was painter Benjamin Abramowitz born in 1917?,28,4,0,0.875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,2551,"According to the last population update in 2010, the rural locality of Taz Russk",13,17,2,0.40625,14,16,2,0.4375,23,8,1,0.71875,18,14,0,0.5625,21,9,2,0.65625,20,12,0,0.625
+binary,val,1866,"What specific date (month, day, year) was the very first Q Con hosted by Prism C",32,0,0,1.0,25,7,0,0.78125,32,0,0,1.0,28,4,0,0.875,29,3,0,0.90625,32,0,0,1.0
+binary,val,3483,What year did Bill Brown start teaching at the University of Chicago?,32,0,0,1.0,25,7,0,0.78125,27,5,0,0.84375,25,7,0,0.78125,32,0,0,1.0,28,4,0,0.875
+binary,val,3358,What are the complete names of John Constable's (English landscape painter) two ,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,1444,How many competitors did Italy bring to the 1964 Winter Olympics? How many of th,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3313,"Who founded the municipality of San Roque, Antioquia, Colombia?",29,0,3,0.90625,31,0,1,0.96875,30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875
+binary,val,4035,"Which school did Lucas Valeriu Ntuba Radebe, the former South African profession",30,1,1,0.9375,29,3,0,0.90625,24,4,4,0.75,25,2,5,0.78125,25,2,5,0.78125,27,3,2,0.84375
+binary,val,2260,What was Sujata Manohar's position just before she was appointed as a judge of t,4,2,26,0.125,5,0,27,0.15625,6,1,25,0.1875,10,1,21,0.3125,8,1,23,0.25,5,2,25,0.15625
+binary,val,3211,How old was composer Miya Masaoka when she began studying classical music?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,val,3430,"Who did Kiyosi Ito collaborate with to publish ""On the Probability Distribution ",28,4,0,0.875,29,3,0,0.90625,27,5,0,0.84375,23,9,0,0.71875,30,2,0,0.9375,25,7,0,0.78125
+binary,val,1347,"What day, month, and year did the experimental aircraft AirGeep II have its firs",14,18,0,0.4375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+binary,train,1510,What are the names of the children of Princess Shruti Rajya Lakshmi Devi Shah an,10,0,22,0.3125,11,0,21,0.34375,12,0,20,0.375,13,0,19,0.40625,11,0,21,0.34375,15,0,17,0.46875
+binary,train,902,The Wandanlage stereo system was originally released in which year?,32,0,0,1.0,22,10,0,0.6875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,2268,"On what day, month, and year was Motonori Matuyama born?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,28,0,4,0.875
+binary,train,1704,"In which year was Stefan Parkman, the conductor, awarded the Order of the Danneb",7,0,25,0.21875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3720,Which two universities did Chadwell O'Connor attend?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,989,"From which date, month, and year to which date, month, and year did the Indian l",3,28,1,0.09375,6,26,0,0.1875,8,22,2,0.25,8,23,1,0.25,4,28,0,0.125,8,23,1,0.25
+binary,train,3051,How many chimpanzees were observed with cold-like symptoms when the respiratory ,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875,31,0,1,0.96875
+binary,train,3903,What are the name of the town and province in the Netherlands where Frans Gunnin,1,19,12,0.03125,0,27,5,0.0,14,8,10,0.4375,6,1,25,0.1875,2,1,29,0.0625,5,1,26,0.15625
+binary,train,955,"In which volume and issue of the journal Linguistics was the paper ""Articulatory",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,55,What are the GPS coordinates of Malawi?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,4016,"Until which day, month, and year was Jules Ferry in office as the Prime Minister",32,0,0,1.0,28,0,4,0.875,30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,2296,Domenico Lino Morichini first examined the fossilized tooth of what type of anim,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,30,0,2,0.9375,32,0,0,1.0
+binary,train,316,"The Dante-Alighieri monument, located on Allée des Poètes along Rue D'Auteuil, w",31,0,1,0.96875,32,0,0,1.0,30,0,2,0.9375,32,0,0,1.0,30,0,2,0.9375,32,0,0,1.0
+binary,train,2790,What did the artist Lygia Pape initially study in university?,19,0,13,0.59375,17,0,15,0.53125,14,0,18,0.4375,15,0,17,0.46875,15,0,17,0.46875,13,0,19,0.40625
+binary,train,735,What Terraria patch added biome-specific stalactites to the underground areas?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3104,How many years did Elliot Page spend studying the Interact Program at Vaughan Ro,19,3,10,0.59375,25,6,1,0.78125,32,0,0,1.0,32,0,0,1.0,30,0,2,0.9375,32,0,0,1.0
+binary,train,1276,In what year did Sir William Beechey (British Portraitist) retire to Hampstead?,7,19,6,0.21875,30,2,0,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,711,The first clock installed outside of the family farm of Alberto Olvera Hernández,10,22,0,0.3125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+binary,train,2461,"In what city in England was James Brain, an English football manager and player ",28,4,0,0.875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1882,What is the name of the astronomer who discovered 86 Semele?,5,1,26,0.15625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,891,"In which year was the municipality of La Uvita, Boyacá, Colombia, founded?",6,0,26,0.1875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3172,"After what battle did Napoleon say, ""Soldats! Je suis content de vous""? (English",25,0,7,0.78125,16,0,16,0.5,14,0,18,0.4375,13,0,19,0.40625,10,0,22,0.3125,20,0,12,0.625
+binary,train,4024,In which city was Audrey McLaughlin born?,30,0,2,0.9375,29,0,3,0.90625,25,0,7,0.78125,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0
+binary,train,304,Who published the first scientific description of the Asiatic lion in 1826?,30,0,2,0.9375,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875
+binary,train,3659,"In which year, month, and day was the YouTuber DalasReview born?",13,6,13,0.40625,30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,4066,During which period did William Butts Ittner serve as the President of the St. L,14,0,18,0.4375,31,1,0,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3967,"What are the day, month, and year of release for the Spyro: Enter the Dragonfly ",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,4207,The Black Widow Pulsar (PSR B1957+20) is located within which constellation?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3607,"In what year did Israel Gelfand, together with Fomin and other scientists, set u",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,533,"What day, month, and year was Massimo Cacciari, an Italian philosopher and polit",31,0,1,0.96875,29,0,3,0.90625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3862,"By 1913, how many stars could astronomer Annie Jump Cannon classify per hour?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1232,"What was the population of Konaruiyeh, a village in Esfandaqeh Rural District, i",31,0,1,0.96875,31,0,1,0.96875,31,0,1,0.96875,31,0,1,0.96875,31,0,1,0.96875,32,0,0,1.0
+binary,train,621,How many gold medals in fencing did Hungary win during the 1964 Summer Olympics?,22,0,10,0.6875,23,0,9,0.71875,22,0,10,0.6875,24,0,8,0.75,26,0,6,0.8125,25,0,7,0.78125
+binary,train,639,What was the first name of the Irish-born computer programmer Kathleen Rita McNu,14,0,18,0.4375,31,0,1,0.96875,27,0,5,0.84375,32,0,0,1.0,29,0,3,0.90625,30,0,2,0.9375
+binary,train,3059,In what year was the Ethiopian politician Billene Seyoum Woldeyes born?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1889,"Where did the Third Day song ""Nothing at All"" peak on the Billboard rock charts?",31,0,1,0.96875,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0
+binary,train,565,"On which day, month, and year did Egypt play against Angola in Group A of the 19",30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1515,At which University of Puerto Rico campus did New York State Representative Nydi,4,28,0,0.125,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3349,"Which date, month, and year was the Rana Prime Minister Padma Shumsher Jung Baha",22,0,9,0.6875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1591,In which month of 1996 did Puntsagiin Jasrai's tenure as Prime Minister of Mongo,6,0,26,0.1875,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1674,In what country did Richard Serra create his first outdoor sculptures?,5,0,27,0.15625,4,4,24,0.125,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1192,"What year was the municipality of Pajarito, Boyacá, Colombia, founded?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0
+binary,train,768,What was the name of New York's National Academy of Design in 1825?,27,5,0,0.84375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1454,"Who are the two authors who wrote the review paper ""Infant sleep disturbance: De",23,0,9,0.71875,17,9,6,0.53125,13,10,9,0.40625,14,7,11,0.4375,19,7,6,0.59375,20,4,8,0.625
+binary,train,1580,"In the primary setting of the Starfinder tabletop RPG, what is the title given t",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,2406,"What day, month, and year did Peter III of Aragon become King of Sicily?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3129,"On what day, month, and year was the asteroid 369 Aëria discovered?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,2686,How many new subclasses were introduced in Tasha's Cauldron of Everything (not i,1,0,31,0.03125,2,0,30,0.0625,0,0,32,0.0,1,0,31,0.03125,3,0,29,0.09375,2,0,30,0.0625
+binary,train,3011,"What certification did Reba's album ""So Good Together"" receive from the United S",31,0,1,0.96875,32,0,0,1.0,31,0,1,0.96875,30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0
+binary,train,2138,"How many control participants were used in the research paper ""Grey matter atrop",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,4054,Which creative team (writer and artist) created the DC Comics character Gunfire?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1707,What year was Oliver Heaviside awarded the Faraday Medal?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,820,What country won more equestrian medals than any other team at the 2004 Olympic ,2,1,29,0.0625,1,12,19,0.03125,5,0,27,0.15625,31,0,1,0.96875,31,0,1,0.96875,30,0,2,0.9375
+binary,train,4041,"During whose papacy did Gian Lorenzo Bernini create the ""Ecstasy of Saint Teresa",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1317,What was Augustine George Masih's position just before being appointed as a judg,22,0,10,0.6875,23,0,9,0.71875,24,0,8,0.75,21,0,11,0.65625,24,0,8,0.75,19,0,13,0.59375
+binary,train,2728,In honor of whom was the role of Poet Laureate of Ontario established?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875
+binary,train,947,What was the title of the engineer and scientist Ahmet Cemal Eringen's Ph.D. dis,32,0,0,1.0,30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1878,In what year was the beetle species Glipa acutimaculata described?,25,0,7,0.78125,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,2359,"In which year did Edward Meyrick first describe Glyphipterix saurodonta, the spe",5,14,13,0.15625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1520,"In feet, what is the draft length of the Goderich 35 fitted with a standard keel",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,4294,"What year was the municipality of San Carlos, Antioquia, Colombia, founded?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1176,In what year did Carlo Alberto Galluzzi serve as Vice-Chair of the Delegation fo,1,0,31,0.03125,11,0,21,0.34375,6,0,26,0.1875,10,0,22,0.3125,2,0,30,0.0625,0,0,32,0.0
+binary,train,1993,"In what year, month, and place was Rahat Kazmi, the Pakistani actor, born?",4,1,27,0.125,19,0,13,0.59375,28,0,4,0.875,24,0,8,0.75,24,0,8,0.75,22,0,10,0.6875
+binary,train,3709,In which city and province was David Sweet born?,24,0,8,0.75,30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,2408,"From which constituency did Justice Mohammad Afzal Cheema, former Deputy Speaker",2,0,30,0.0625,19,1,12,0.59375,32,0,0,1.0,30,0,2,0.9375,32,0,0,1.0,28,0,4,0.875
+binary,train,1435,What style are the roofs of the ten buildings at the Wasyl Negrych Homestead?,3,2,27,0.09375,4,9,19,0.125,28,0,4,0.875,32,0,0,1.0,30,0,2,0.9375,28,0,4,0.875
+binary,train,142,What is the name of the individual in whose memory the Taj Mahal was built by Mu,27,0,5,0.84375,22,0,10,0.6875,20,0,12,0.625,22,0,10,0.6875,24,0,8,0.75,21,0,11,0.65625
+binary,train,3338,Where did Kiyoshi Oka work as a professor from 1949 to 1964?,7,25,0,0.21875,10,22,0,0.3125,18,14,0,0.5625,11,21,0,0.34375,21,11,0,0.65625,24,8,0,0.75
+binary,train,3251,What is the starting tractive effort of a Railpower GG20B in kilonewtons?,11,0,21,0.34375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,0,0.96875,32,0,0,1.0
+binary,train,2715,What was the length of Amal Kumar Sarkar's tenure as Chief Justice of India in d,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,156,In which two fields of study did computer scientist Nancy Amato receive two bach,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,933,In which city was the linguist Georgy Konstantinovich Danilov born?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,34,"On what day, month, and year was David Sweet, Canadian politician, born?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3700,In which year was Maria Elena Walsh named Illustrious Citizen of the City of Bue,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,309,Where was Juvénal Habyarimana's body identified within?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,125,What week was Katie Sapienza eliminated in Season 1 of The Bachelor?,12,2,18,0.375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1423,"On what day, month, and year was the Mediumwave transmitter Lopik, a medium-wave",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,360,Into which Hall of Fame was Zippo Pine Bar inducted in 1992?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1353,What was the first palace in Rome to be erected from the ground up in the new Re,1,0,31,0.03125,3,0,29,0.09375,0,0,32,0.0,0,0,32,0.0,0,0,32,0.0,0,0,32,0.0
+binary,train,819,"What were the month, day, and year Sir Nathaniel Brent, English college head, di",1,0,31,0.03125,2,0,30,0.0625,0,0,32,0.0,0,0,32,0.0,0,0,32,0.0,0,0,32,0.0
+binary,train,741,"What city was Richard Serra in when he created his work ""To Lift""?",20,6,6,0.625,30,1,1,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1779,"In which year did Richard Huemer, an American animator, join the Fleischer Studi",31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3581,"In the online game World of Warcraft, in patch 5.2.0, what change was made to th",4,0,28,0.125,3,0,29,0.09375,2,0,30,0.0625,3,0,29,0.09375,3,0,29,0.09375,2,0,30,0.0625
+binary,train,3041,What is the title of Jerry Lee Lewis's 13th album?,32,0,0,1.0,27,5,0,0.84375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,4163,What is the peak in meters of the Cochiquito volcanic group?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,1927,"In which year was the municipality of Murindó, Antioquia, Colombia, founded?",6,0,26,0.1875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3337,What is the name of the Brazilian entomologist who first described the species o,29,3,0,0.90625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3387,"On what day, month, and year did Umar Farouk Abdulmutallab appear in front of Ju",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+binary,train,3782,In what city and state did Colin Pittendrigh die?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,2363,"When (month, day, year) did the first episode of Candela Obscura premiere on Twi",4,18,10,0.125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,2378,How many operator cells are within the Yamaha YM2203 from the 1980s?,31,0,1,0.96875,32,0,0,1.0,30,0,2,0.9375,30,0,2,0.9375,31,0,1,0.96875,31,0,1,0.96875
+ternary_adaptive,val,2056,What is the name of the mosque that was first built in Srinagar?,28,0,4,0.875,29,0,3,0.90625,31,0,1,0.96875,27,0,5,0.84375,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,876,"On which day, month, and year was Max Vuyisile Sisulu born?",32,0,0,1.0,11,21,0,0.34375,14,18,0,0.4375,21,11,0,0.65625,12,20,0,0.375,9,23,0,0.28125
+ternary_adaptive,val,126,"In the oracle card deck created by Kyle Gray titled ""The 22 Archangels Oracle,"" ",27,0,5,0.84375,24,0,8,0.75,24,0,8,0.75,27,0,5,0.84375,25,0,7,0.78125,26,0,6,0.8125
+ternary_adaptive,val,3307,"What population did the town of Alnham in Northumberland, England have in the 20",32,0,0,1.0,19,13,0,0.59375,14,18,0,0.4375,7,25,0,0.21875,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1422,What year did Glamour Magazine first name Zanele Muholi 'Campaigner of the Year',25,7,0,0.78125,5,27,0,0.15625,11,21,0,0.34375,11,21,0,0.34375,6,26,0,0.1875,12,20,0,0.375
+ternary_adaptive,val,1135,Who was the first Red Sox manager to win two World Series?,7,0,25,0.21875,9,0,23,0.28125,8,0,24,0.25,11,0,21,0.34375,11,0,21,0.34375,9,0,23,0.28125
+ternary_adaptive,val,1051,"In what year was Nash-Williams' doctoral thesis ""Decomposition of Graphs into In",32,0,0,1.0,10,22,0,0.3125,7,25,0,0.21875,8,24,0,0.25,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,4038,Which year did the architect Mary Almy work on Garland Junior College?,2,30,0,0.0625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1394,In which month of 1968 was the OV1-13 spacecraft launched?,29,0,3,0.90625,27,2,3,0.84375,27,3,2,0.84375,22,5,5,0.6875,21,9,2,0.65625,22,9,1,0.6875
+ternary_adaptive,val,2908,"Give the abbreviated name of the launch vehicle, along with its mission or fligh",32,0,0,1.0,7,25,0,0.21875,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,31,1,0.0
+ternary_adaptive,val,2094,"In which year did Arshad Sauleh (an artist and a radio broadcaster of Srinagar, ",29,3,0,0.90625,3,29,0,0.09375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,3501,Who is the father of the Aruban politician Dangui Oduber?,17,0,15,0.53125,15,0,17,0.46875,18,0,14,0.5625,17,0,15,0.53125,18,0,14,0.5625,22,0,10,0.6875
+ternary_adaptive,val,3507,"What year did the painter Joseph Matthäus Aigner paint ""Portrait of a Lady with ",2,30,0,0.0625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,139,"At which college in Pune did the 7th Chief Justice of India, P. B. Gajendragadka",4,0,28,0.125,8,12,12,0.25,6,12,14,0.1875,12,10,9,0.375,14,6,12,0.4375,21,2,9,0.65625
+ternary_adaptive,val,3520,What is the name of the naturalist who first described the sharpbill under the b,31,0,1,0.96875,12,19,1,0.375,12,18,2,0.375,16,16,0,0.5,16,13,3,0.5,24,5,3,0.75
+ternary_adaptive,val,4070,What former First Lady served as co-chair of the Met Gala from 1977 to 1978?,1,31,0,0.03125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,3205,Richard Serra created his work 'Thirty-Five Feet of Lead Rolled Up' while living,11,21,0,0.34375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,3749,What was South African ballet dancer Maryon Lane's birth name?,26,4,2,0.8125,9,22,1,0.28125,12,20,0,0.375,13,16,3,0.40625,17,13,2,0.53125,14,15,3,0.4375
+ternary_adaptive,val,48,"Who wrote the lyrics to ""Dream Serenade,"" the opening theme song for the radio p",25,7,0,0.78125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,2179,What is the total area of Chitwan National Park in square kilometers?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,3622,"Which season and episode of ""Saturday Night Live"" did Susan Lucci host?",28,0,4,0.875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,2747,In which year was the John Brophy Award first awarded?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,1967,What is the name of the CIA project whose user guide was published by WikiLeaks ,24,0,8,0.75,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1309,How many fight wins did the British-American kickboxer Andrew Tate have prior to,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,28,4,0,0.875,29,3,0,0.90625
+ternary_adaptive,val,734,In what year was the beetle species Conalia helva described?,32,0,0,1.0,9,23,0,0.28125,3,29,0,0.09375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,919,"In which year was the municipality of Carepa, Antioquia, Colombia, founded?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,3550,Which medalist designed the Francis P. Garvan–John M. Olin Medal?,31,0,1,0.96875,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1716,What is the elevation in feet of Apharwat Peak in Gulmarg?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,2297,What was the title of the mechanical engineer Gang Chen's Ph.D. thesis published,32,0,0,1.0,9,23,0,0.28125,20,12,0,0.625,18,13,1,0.5625,19,13,0,0.59375,24,8,0,0.75
+ternary_adaptive,val,2137,In which year did Ratan Parimoo (an Indian art historian from Kashmir) win the G,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,1063,Which major American political party was the first to have a keynote speech deli,8,0,24,0.25,6,4,22,0.1875,10,6,16,0.3125,4,17,11,0.125,6,23,3,0.1875,6,21,5,0.1875
+ternary_adaptive,val,2823,What is the maximum length of the Aegean Sea in miles?,7,0,25,0.21875,7,0,25,0.21875,8,0,24,0.25,8,0,24,0.25,13,0,19,0.40625,7,0,25,0.21875
+ternary_adaptive,val,1126,What are the names of the great-grandparents of Whitney Houston from her mother',32,0,0,1.0,28,4,0,0.875,27,5,0,0.84375,23,9,0,0.71875,18,13,1,0.5625,15,17,0,0.46875
+ternary_adaptive,val,3325,What is the Pinyin name of the Mansion that comes after 斗 within the Black Torto,2,0,30,0.0625,3,19,10,0.09375,2,21,9,0.0625,2,10,20,0.0625,6,13,13,0.1875,3,18,11,0.09375
+ternary_adaptive,val,839,"What's the month, day, and year of the online publication of the paper ""Articula",16,4,12,0.5,9,6,17,0.28125,14,1,17,0.4375,11,0,21,0.34375,22,0,10,0.6875,15,0,17,0.46875
+ternary_adaptive,val,4286,What is the name of the astronomer who discovered 83 Beatrix?,14,0,18,0.4375,20,12,0,0.625,22,8,2,0.6875,30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,1408,What was the occupation of Harry Belafonte's mother?,28,4,0,0.875,3,29,0,0.09375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,2269,What year did Katia Bellillo become Minister for Regional Affairs?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,1,0,0.96875,28,4,0,0.875
+ternary_adaptive,val,448,What years was Antonio de Padua María Severino López de Santa Anna y Pérez de Le,29,3,0,0.90625,6,26,0,0.1875,6,26,0,0.1875,5,27,0,0.15625,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1212,"As of 2010, what was the population of the village of Manyazybash in Russia?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,501,"What is the name of the university where Ana Figueroa, a political activist and ",32,0,0,1.0,8,24,0,0.25,3,29,0,0.09375,10,22,0,0.3125,17,15,0,0.53125,12,20,0,0.375
+ternary_adaptive,val,185,In which year did Maharaj Kishan Bhan (an Indian pediatrician and clinical scien,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,860,Which Indian squash player won the 2017 Men’s Makati Open Squash tournament?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,2033,What is the name of track 3 on the Mario Kart 64 Greatest Hits soundtrack releas,1,0,31,0.03125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,3001,Which Illinois university did artist Herbert House graduate from?,25,2,5,0.78125,0,32,0,0.0,0,32,0,0.0,5,27,0,0.15625,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1113,In what year did Kristin Otto retire from swimming?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,520,"In the British drama series ""Happy Valley,"" who does Alec Secareanu play?",7,4,21,0.21875,12,0,20,0.375,10,0,22,0.3125,13,0,19,0.40625,12,0,20,0.375,16,0,16,0.5
+ternary_adaptive,val,3848,"On what day, month, and year was Takashi Masuzaki born?",32,0,0,1.0,17,15,0,0.53125,13,19,0,0.40625,15,17,0,0.46875,9,23,0,0.28125,13,19,0,0.40625
+ternary_adaptive,val,199,"In what year did Claribel and Etta Cone acquire Henri Matisse's ""Blue Nude"" at t",18,0,14,0.5625,23,0,9,0.71875,20,0,12,0.625,23,0,9,0.71875,27,0,5,0.84375,20,0,12,0.625
+ternary_adaptive,val,887,"What date (day, month, and year) was Robert McKee, the Maryland politician who r",32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,2488,"Between which years was the ""Neptune and Triton"" sculpture carved?",32,0,0,1.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,2851,On which year was China Zorrilla invested Chevalier des Arts et des Lettres?,28,4,0,0.875,7,25,0,0.21875,5,27,0,0.15625,3,29,0,0.09375,9,23,0,0.28125,4,28,0,0.125
+ternary_adaptive,val,2450,In what year did Valery Matveevich Panov establish the Ashdod Art Centre in Isra,32,0,0,1.0,9,23,0,0.28125,4,28,0,0.125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,2139,What kind of factory did Anselm Kiefer transform into a studio in 1992?,32,0,0,1.0,14,18,0,0.4375,13,19,0,0.40625,15,17,0,0.46875,14,18,0,0.4375,11,21,0,0.34375
+ternary_adaptive,val,3816,Who murdered the original Baron Blitzkrieg?,15,17,0,0.46875,0,32,0,0.0,0,31,1,0.0,0,32,0,0.0,0,31,1,0.0,0,31,1,0.0
+ternary_adaptive,val,1116,"What year was the municipality of San Pedro de Urabá, Antioquia, Colombia, found",12,0,20,0.375,22,0,10,0.6875,25,0,7,0.78125,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,3994,What are the names of Heisuke and Wakako Hironaka's children?,32,0,0,1.0,29,3,0,0.90625,25,7,0,0.78125,25,7,0,0.78125,28,4,0,0.875,29,3,0,0.90625
+ternary_adaptive,val,366,"What year was ""Discussion sur l’évolution de l’univers"" by Georges Lemaitre publ",18,14,0,0.5625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1442,What's the first typhoon of the 2019 Pacific typhoon season called?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,251,"On what day, month, and year did Frank Schreider, an American explorer, die?",29,0,3,0.90625,17,12,3,0.53125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1633,"Odisha’s longest road bridge, “Netaji Subhas Chandra Bose Setu,” has been built ",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,2108,In what year was the beetle species Glipa alboscutellata described?,32,0,0,1.0,26,6,0,0.8125,27,5,0,0.84375,32,0,0,1.0,32,0,0,1.0,27,5,0,0.84375
+ternary_adaptive,val,96,What disease was Elizabeth Esteve-Coll diagnosed with that forced her to step do,32,0,0,1.0,25,7,0,0.78125,12,20,0,0.375,9,23,0,0.28125,10,22,0,0.3125,12,20,0,0.375
+ternary_adaptive,val,521,What university did Berlinda Tolbert major in theater at?,19,12,1,0.59375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,3273,"What was Zero Bridge originally nicknamed in Srinagar, Kashmir?",32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,2021,In what city and state is Richard Neutra's Slavin House located?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,4079,"What month and year was Corrado Gabriele, an Italian politician, born?",7,8,17,0.21875,0,10,22,0.0,0,13,19,0.0,0,13,19,0.0,0,10,22,0.0,0,12,20,0.0
+ternary_adaptive,val,4185,For which work was Richard F. Fenno Jr. awarded the D.B. Hardeman Prize?,22,0,10,0.6875,6,1,25,0.1875,5,0,27,0.15625,4,0,28,0.125,4,0,28,0.125,0,0,32,0.0
+ternary_adaptive,val,1465,"What was the name of the school where S. M. Krishna, an Indian politician, finis",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,1196,"Across 2016-2022, how many episodes in total did Hakuyu Go direct for Mob Psycho",28,4,0,0.875,4,27,1,0.125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1663,Until which class/grade did Elliot Page attend the Halifax Grammar School?,31,0,1,0.96875,23,9,0,0.71875,22,10,0,0.6875,31,1,0,0.96875,23,9,0,0.71875,22,10,0,0.6875
+ternary_adaptive,val,3380,"What year was the municipality of Cómbita, Boyacá, Colombia, founded?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,3812,In which month and year was the 64-bit version of Raspberry Pi OS released?,1,0,31,0.03125,0,23,9,0.0,0,26,6,0.0,0,23,9,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1648,The statue of Efraín González Luna is installed in which Mexican state?,18,0,14,0.5625,9,10,13,0.28125,5,5,22,0.15625,8,0,24,0.25,4,5,23,0.125,5,0,27,0.15625
+ternary_adaptive,val,1578,"Which day, month, and year did the series Human Planet first premiere on Discove",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,2157,"On what month, day, and year was Mammoth Cave National Park first designated as ",8,0,24,0.25,0,32,0,0.0,0,32,0,0.0,1,29,2,0.03125,2,29,1,0.0625,0,32,0,0.0
+ternary_adaptive,val,1150,What patch was released after Patch 1.11.0 for the game World of Warcraft?,16,0,16,0.5,5,0,27,0.15625,21,0,11,0.65625,25,0,7,0.78125,21,2,9,0.65625,32,0,0,1.0
+ternary_adaptive,val,2827,What TTRPG won the 2016 Indie RPG of the Year award?,20,6,6,0.625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,2191,"On what date, month, and year was Clifford Cunnell, an English cricketer, born?",32,0,0,1.0,32,0,0,1.0,22,10,0,0.6875,12,20,0,0.375,5,27,0,0.15625,0,32,0,0.0
+ternary_adaptive,val,2356,"Tell me the specific day, month, and year when the Samajwadi Janata Party was fo",26,0,6,0.8125,4,27,1,0.125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,3793,How many mountaineers were killed in the avalanche in Uttarkashi on 4 October 20,24,0,8,0.75,29,0,3,0.90625,28,0,4,0.875,25,0,7,0.78125,24,0,8,0.75,25,0,7,0.78125
+ternary_adaptive,val,2979,What is the average depth of Manasbal Lake in meters and feet?,32,0,0,1.0,17,15,0,0.53125,18,14,0,0.5625,17,15,0,0.53125,16,16,0,0.5,8,24,0,0.25
+ternary_adaptive,val,3572,"In what year did S. Osman Ali, the 7th Governor of the State Bank of Pakistan, e",22,10,0,0.6875,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,4266,How many tornadoes were confirmed in the U.S. during the tornado outbreak of Jun,26,0,6,0.8125,28,0,4,0.875,30,0,2,0.9375,29,0,3,0.90625,30,0,2,0.9375,29,0,3,0.90625
+ternary_adaptive,val,308,What coach was Mike Young an assistant to at Radford University?,32,0,0,1.0,22,10,0,0.6875,10,22,0,0.3125,12,20,0,0.375,8,24,0,0.25,5,27,0,0.15625
+ternary_adaptive,val,3135,Name the architect who designed the Bangabandhu Sheikh Mujibur Rahman Novo Theat,32,0,0,1.0,32,0,0,1.0,30,0,2,0.9375,29,0,3,0.90625,29,0,3,0.90625,31,0,1,0.96875
+ternary_adaptive,val,2351,What breed was Dolly the Sheep?,9,23,0,0.28125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,2274,What was the percentage of voter turnout during the 1992 Ghanaian presidential e,18,12,2,0.5625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1204,What is the first and last name of the host who interviewed military pilot Eugen,19,0,13,0.59375,16,10,6,0.5,23,9,0,0.71875,23,6,3,0.71875,25,7,0,0.78125,19,10,3,0.59375
+ternary_adaptive,val,1632,What is written on the right side of the cover art for the Dylan album Planet Wa,20,0,12,0.625,10,19,3,0.3125,5,20,7,0.15625,9,16,7,0.28125,7,20,5,0.21875,10,21,1,0.3125
+ternary_adaptive,val,3298,"What day, month, and year was the municipality of Segovia, Antioquia, Colombia, ",24,0,8,0.75,16,7,9,0.5,20,9,3,0.625,15,14,3,0.46875,19,13,0,0.59375,16,16,0,0.5
+ternary_adaptive,val,1717,How many people were killed when a tractor-trolley returning from a temple fell ,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875,31,0,1,0.96875,31,0,1,0.96875,31,0,1,0.96875
+ternary_adaptive,val,2091,Where was Agostina Pietrantoni born?,30,0,2,0.9375,27,5,0,0.84375,22,7,3,0.6875,23,8,1,0.71875,18,11,3,0.5625,20,11,1,0.625
+ternary_adaptive,val,2752,In which NYC borough was painter Benjamin Abramowitz born in 1917?,28,4,0,0.875,5,27,0,0.15625,13,19,0,0.40625,26,6,0,0.8125,21,9,2,0.65625,27,5,0,0.84375
+ternary_adaptive,val,2551,"According to the last population update in 2010, the rural locality of Taz Russk",13,17,2,0.40625,7,24,1,0.21875,6,26,0,0.1875,6,26,0,0.1875,20,7,5,0.625,19,12,1,0.59375
+ternary_adaptive,val,1866,"What specific date (month, day, year) was the very first Q Con hosted by Prism C",32,0,0,1.0,13,19,0,0.40625,11,21,0,0.34375,10,22,0,0.3125,5,27,0,0.15625,5,27,0,0.15625
+ternary_adaptive,val,3483,What year did Bill Brown start teaching at the University of Chicago?,32,0,0,1.0,8,23,1,0.25,2,30,0,0.0625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,3358,What are the complete names of John Constable's (English landscape painter) two ,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,1444,How many competitors did Italy bring to the 1964 Winter Olympics? How many of th,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,3313,"Who founded the municipality of San Roque, Antioquia, Colombia?",29,0,3,0.90625,29,0,3,0.90625,29,0,3,0.90625,25,0,7,0.78125,26,2,4,0.8125,26,5,1,0.8125
+ternary_adaptive,val,4035,"Which school did Lucas Valeriu Ntuba Radebe, the former South African profession",30,1,1,0.9375,28,4,0,0.875,22,7,3,0.6875,28,2,2,0.875,31,0,1,0.96875,26,3,3,0.8125
+ternary_adaptive,val,2260,What was Sujata Manohar's position just before she was appointed as a judge of t,4,2,26,0.125,3,20,9,0.09375,4,15,13,0.125,1,20,11,0.03125,1,23,8,0.03125,0,24,8,0.0
+ternary_adaptive,val,3211,How old was composer Miya Masaoka when she began studying classical music?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,val,3430,"Who did Kiyosi Ito collaborate with to publish ""On the Probability Distribution ",28,4,0,0.875,4,28,0,0.125,2,30,0,0.0625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,val,1347,"What day, month, and year did the experimental aircraft AirGeep II have its firs",14,18,0,0.4375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,1510,What are the names of the children of Princess Shruti Rajya Lakshmi Devi Shah an,11,0,21,0.34375,0,29,3,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,902,The Wandanlage stereo system was originally released in which year?,32,0,0,1.0,0,32,0,0.0,0,32,0,0.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,2268,"On what day, month, and year was Motonori Matuyama born?",32,0,0,1.0,2,30,0,0.0625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,1704,"In which year was Stefan Parkman, the conductor, awarded the Order of the Danneb",7,0,25,0.21875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3720,Which two universities did Chadwell O'Connor attend?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,989,"From which date, month, and year to which date, month, and year did the Indian l",3,28,1,0.09375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,3051,How many chimpanzees were observed with cold-like symptoms when the respiratory ,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,955,"In which volume and issue of the journal Linguistics was the paper ""Articulatory",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,55,What are the GPS coordinates of Malawi?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,9,23,0,0.28125,0,31,1,0.0,0,32,0,0.0
+ternary_adaptive,train,4016,"Until which day, month, and year was Jules Ferry in office as the Prime Minister",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,2296,Domenico Lino Morichini first examined the fossilized tooth of what type of anim,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0
+ternary_adaptive,train,316,"The Dante-Alighieri monument, located on Allée des Poètes along Rue D'Auteuil, w",32,0,0,1.0,0,32,0,0.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,2790,What did the artist Lygia Pape initially study in university?,13,0,19,0.40625,17,0,15,0.53125,13,0,19,0.40625,20,0,12,0.625,11,0,21,0.34375,13,0,19,0.40625
+ternary_adaptive,train,735,What Terraria patch added biome-specific stalactites to the underground areas?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3104,How many years did Elliot Page spend studying the Interact Program at Vaughan Ro,19,3,10,0.59375,0,31,1,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,1276,In what year did Sir William Beechey (British Portraitist) retire to Hampstead?,7,19,6,0.21875,0,32,0,0.0,0,32,0,0.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,711,The first clock installed outside of the family farm of Alberto Olvera Hernández,9,22,1,0.28125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,2461,"In what city in England was James Brain, an English football manager and player ",28,4,0,0.875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1882,What is the name of the astronomer who discovered 86 Semele?,5,0,27,0.15625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,891,"In which year was the municipality of La Uvita, Boyacá, Colombia, founded?",6,0,26,0.1875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3172,"After what battle did Napoleon say, ""Soldats! Je suis content de vous""? (English",27,0,5,0.84375,1,28,3,0.03125,21,7,4,0.65625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,4024,In which city was Audrey McLaughlin born?,31,0,1,0.96875,26,0,6,0.8125,30,0,2,0.9375,31,0,1,0.96875,32,0,0,1.0,30,0,2,0.9375
+ternary_adaptive,train,304,Who published the first scientific description of the Asiatic lion in 1826?,32,0,0,1.0,31,1,0,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3659,"In which year, month, and day was the YouTuber DalasReview born?",13,5,14,0.40625,30,0,2,0.9375,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,31,0,1,0.96875
+ternary_adaptive,train,4066,During which period did William Butts Ittner serve as the President of the St. L,13,0,19,0.40625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3967,"What are the day, month, and year of release for the Spyro: Enter the Dragonfly ",32,0,0,1.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,4207,The Black Widow Pulsar (PSR B1957+20) is located within which constellation?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3607,"In what year did Israel Gelfand, together with Fomin and other scientists, set u",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0
+ternary_adaptive,train,533,"What day, month, and year was Massimo Cacciari, an Italian philosopher and polit",31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3862,"By 1913, how many stars could astronomer Annie Jump Cannon classify per hour?",32,0,0,1.0,30,2,0,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1232,"What was the population of Konaruiyeh, a village in Esfandaqeh Rural District, i",31,0,1,0.96875,30,0,2,0.9375,30,0,2,0.9375,30,0,2,0.9375,28,0,4,0.875,26,0,6,0.8125
+ternary_adaptive,train,621,How many gold medals in fencing did Hungary win during the 1964 Summer Olympics?,21,0,11,0.65625,24,0,8,0.75,26,0,6,0.8125,27,0,5,0.84375,26,0,6,0.8125,27,0,5,0.84375
+ternary_adaptive,train,639,What was the first name of the Irish-born computer programmer Kathleen Rita McNu,14,0,18,0.4375,21,9,2,0.65625,31,0,1,0.96875,32,0,0,1.0,29,0,3,0.90625,31,0,1,0.96875
+ternary_adaptive,train,3059,In what year was the Ethiopian politician Billene Seyoum Woldeyes born?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1889,"Where did the Third Day song ""Nothing at All"" peak on the Billboard rock charts?",32,0,0,1.0,0,32,0,0.0,26,0,6,0.8125,15,0,17,0.46875,18,0,14,0.5625,20,0,12,0.625
+ternary_adaptive,train,565,"On which day, month, and year did Egypt play against Angola in Group A of the 19",30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1515,At which University of Puerto Rico campus did New York State Representative Nydi,4,28,0,0.125,30,2,0,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3349,"Which date, month, and year was the Rana Prime Minister Padma Shumsher Jung Baha",23,0,9,0.71875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1591,In which month of 1996 did Puntsagiin Jasrai's tenure as Prime Minister of Mongo,6,0,26,0.1875,25,0,7,0.78125,26,0,6,0.8125,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1674,In what country did Richard Serra create his first outdoor sculptures?,5,0,27,0.15625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,1192,"What year was the municipality of Pajarito, Boyacá, Colombia, founded?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,768,What was the name of New York's National Academy of Design in 1825?,27,5,0,0.84375,21,11,0,0.65625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1454,"Who are the two authors who wrote the review paper ""Infant sleep disturbance: De",23,0,9,0.71875,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,1580,"In the primary setting of the Starfinder tabletop RPG, what is the title given t",31,0,1,0.96875,26,6,0,0.8125,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,2406,"What day, month, and year did Peter III of Aragon become King of Sicily?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3129,"On what day, month, and year was the asteroid 369 Aëria discovered?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,2686,How many new subclasses were introduced in Tasha's Cauldron of Everything (not i,2,0,30,0.0625,4,0,28,0.125,4,0,28,0.125,3,0,29,0.09375,0,0,32,0.0,1,0,31,0.03125
+ternary_adaptive,train,3011,"What certification did Reba's album ""So Good Together"" receive from the United S",30,0,2,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,2138,"How many control participants were used in the research paper ""Grey matter atrop",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,4054,Which creative team (writer and artist) created the DC Comics character Gunfire?,32,0,0,1.0,6,26,0,0.1875,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,1707,What year was Oliver Heaviside awarded the Faraday Medal?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,820,What country won more equestrian medals than any other team at the 2004 Olympic ,2,0,30,0.0625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,4041,"During whose papacy did Gian Lorenzo Bernini create the ""Ecstasy of Saint Teresa",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1317,What was Augustine George Masih's position just before being appointed as a judg,22,0,10,0.6875,22,4,6,0.6875,6,24,2,0.1875,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,2728,In honor of whom was the role of Poet Laureate of Ontario established?,32,0,0,1.0,0,32,0,0.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,947,What was the title of the engineer and scientist Ahmet Cemal Eringen's Ph.D. dis,32,0,0,1.0,0,32,0,0.0,0,32,0,0.0,0,31,1,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,1878,In what year was the beetle species Glipa acutimaculata described?,25,0,7,0.78125,29,3,0,0.90625,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,2359,"In which year did Edward Meyrick first describe Glyphipterix saurodonta, the spe",5,14,13,0.15625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,1520,"In feet, what is the draft length of the Goderich 35 fitted with a standard keel",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,4294,"What year was the municipality of San Carlos, Antioquia, Colombia, founded?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1176,In what year did Carlo Alberto Galluzzi serve as Vice-Chair of the Delegation fo,1,0,31,0.03125,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,1993,"In what year, month, and place was Rahat Kazmi, the Pakistani actor, born?",3,0,29,0.09375,7,2,23,0.21875,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,3709,In which city and province was David Sweet born?,24,0,8,0.75,28,0,4,0.875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,2408,"From which constituency did Justice Mohammad Afzal Cheema, former Deputy Speaker",3,0,29,0.09375,3,24,5,0.09375,16,8,8,0.5,30,0,2,0.9375,26,0,6,0.8125,32,0,0,1.0
+ternary_adaptive,train,1435,What style are the roofs of the ten buildings at the Wasyl Negrych Homestead?,3,1,28,0.09375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,142,What is the name of the individual in whose memory the Taj Mahal was built by Mu,24,0,8,0.75,28,0,4,0.875,26,0,6,0.8125,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3338,Where did Kiyoshi Oka work as a professor from 1949 to 1964?,7,25,0,0.21875,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,3251,What is the starting tractive effort of a Railpower GG20B in kilonewtons?,12,0,20,0.375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,2715,What was the length of Amal Kumar Sarkar's tenure as Chief Justice of India in d,32,0,0,1.0,28,4,0,0.875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,156,In which two fields of study did computer scientist Nancy Amato receive two bach,32,0,0,1.0,31,1,0,0.96875,3,29,0,0.09375,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,933,In which city was the linguist Georgy Konstantinovich Danilov born?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,34,"On what day, month, and year was David Sweet, Canadian politician, born?",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3700,In which year was Maria Elena Walsh named Illustrious Citizen of the City of Bue,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,309,Where was Juvénal Habyarimana's body identified within?,32,0,0,1.0,30,2,0,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,125,What week was Katie Sapienza eliminated in Season 1 of The Bachelor?,12,2,18,0.375,30,2,0,0.9375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1423,"On what day, month, and year was the Mediumwave transmitter Lopik, a medium-wave",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,360,Into which Hall of Fame was Zippo Pine Bar inducted in 1992?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,819,"What were the month, day, and year Sir Nathaniel Brent, English college head, di",1,0,31,0.03125,0,6,26,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,741,"What city was Richard Serra in when he created his work ""To Lift""?",20,6,6,0.625,12,18,2,0.375,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1779,"In which year did Richard Huemer, an American animator, join the Fleischer Studi",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875
+ternary_adaptive,train,3581,"In the online game World of Warcraft, in patch 5.2.0, what change was made to th",4,0,28,0.125,2,0,30,0.0625,4,0,28,0.125,5,0,27,0.15625,2,0,30,0.0625,2,0,30,0.0625
+ternary_adaptive,train,3041,What is the title of Jerry Lee Lewis's 13th album?,32,0,0,1.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,4163,What is the peak in meters of the Cochiquito volcanic group?,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,1927,"In which year was the municipality of Murindó, Antioquia, Colombia, founded?",6,0,26,0.1875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3337,What is the name of the Brazilian entomologist who first described the species o,29,3,0,0.90625,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0,0,32,0,0.0
+ternary_adaptive,train,3387,"On what day, month, and year did Umar Farouk Abdulmutallab appear in front of Ju",32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0
+ternary_adaptive,train,3782,In what city and state did Colin Pittendrigh die?,32,0,0,1.0,32,0,0,1.0,31,0,1,0.96875,32,0,0,1.0,32,0,0,1.0,32,0,0,1.0

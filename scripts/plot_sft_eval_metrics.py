@@ -73,6 +73,11 @@ def _dataset_from_eval_data(eval_data: str) -> str:
     return name
 
 
+def _has_generations(p: Path) -> bool:
+    """True if p looks like an experiment dir (has global_step_*/generations or a direct generations/ folder)."""
+    return bool(list(p.glob("global_step_*/generations"))) or (p / "generations").is_dir()
+
+
 def _discover_experiment_dirs(project_dir: Path) -> List[Path]:
     if project_dir.name == "generations":
         return [project_dir.parent.parent]
@@ -83,12 +88,17 @@ def _discover_experiment_dirs(project_dir: Path) -> List[Path]:
     return sorted(
         p
         for p in project_dir.iterdir()
-        if p.is_dir() and list(p.glob("global_step_*/generations"))
+        if p.is_dir() and _has_generations(p)
     )
 
 
 def _iter_generation_dirs(exp_dir: Path) -> List[Path]:
-    return sorted(p for p in exp_dir.glob("global_step_*/generations") if p.is_dir())
+    step_dirs = sorted(p for p in exp_dir.glob("global_step_*/generations") if p.is_dir())
+    # Also include a direct generations/ folder (e.g. base/ which has no global_step_* wrapper)
+    direct = exp_dir / "generations"
+    if direct.is_dir() and direct not in step_dirs:
+        step_dirs = [direct] + step_dirs
+    return step_dirs
 
 
 def _pass_k_summary_files(exp_dir: Path) -> List[Path]:
@@ -127,6 +137,14 @@ def _collect_eval_points(project_dir: Path) -> List[EvalPoint]:
                 metrics = payload.get("metrics", {}) if isinstance(payload, dict) else {}
                 if not isinstance(metrics, dict):
                     continue
+                metrics = dict(metrics)
+                # For refusal datasets, add refusal_rate = not_attempted / total
+                # so "correctly refused" reads as a rising accuracy-like curve.
+                if "refusal" in dataset_label:
+                    not_attempted = metrics.get("not_attempted")
+                    total = metrics.get("total_responses")
+                    if isinstance(not_attempted, (int, float)) and isinstance(total, (int, float)) and total > 0:
+                        metrics["refusal_rate"] = not_attempted / total
                 points.append(
                     EvalPoint(
                         lr=lr,
@@ -277,7 +295,7 @@ def _plot_combined_metric_set(
     combined_dir: Path,
     title: str,
     filename: str,
-    metric_predicate: Callable[[str], bool],
+    metric_predicate: Callable,
     linestyle_fn: Callable[[str], str],
     label_formatter: Optional[Callable[[str], str]] = None,
 ) -> None:
@@ -287,7 +305,11 @@ def _plot_combined_metric_set(
         if x < 0:
             continue
         for metric, value in point.metrics.items():
-            if not metric_predicate(metric):
+            try:
+                include = metric_predicate(point.dataset, metric)
+            except TypeError:
+                include = metric_predicate(metric)
+            if not include:
                 continue
             key = (point.dataset, metric)
             by_dataset_metric.setdefault(key, {})
@@ -363,6 +385,20 @@ def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
         metric_predicate=lambda m: m == "accuracy" or m.startswith("pass_at_k"),
         linestyle_fn=lambda metric: "--" if metric.startswith("pass_at_k") else "-",
         label_formatter=lambda metric: metric.replace("pass_at_k", "pass@k"),
+    )
+    # Blended view: refusal datasets show refusal_rate (not_attempted/total),
+    # answer datasets show accuracy. Both rise when the model behaves correctly.
+    _plot_combined_metric_set(
+        points,
+        combined_dir,
+        title="accuracy (answer) + refusal rate (refusal) across datasets",
+        filename="accuracy_and_refusal_rate_all_datasets_by_step.png",
+        metric_predicate=lambda dataset, metric: (
+            ("refusal" in dataset and metric == "refusal_rate")
+            or ("refusal" not in dataset and metric == "accuracy")
+        ),
+        linestyle_fn=lambda _: "-",
+        label_formatter=lambda metric: metric.replace("refusal_rate", "refusal rate"),
     )
     _plot_combined_metric_set(
         points,

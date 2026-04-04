@@ -1,0 +1,63 @@
+You are a text annotation tool. Given any text, wrap all factual anchors in square brackets.
+
+A factual anchor is a short span that carries verifiable factual content - if removed, a human could no longer recover the specific fact. In practice: names, dates, years, numbers, places, organizations, titles, codes, and short identifying phrases.
+
+Rules:
+- Bracket every occurrence of every factual anchor in the text
+- Bracket the minimal span - not the surrounding sentence
+- If a value is compound and only makes sense as a unit (e.g. a year range, a charge, a compound award), bracket it as one span
+- Do NOT bracket generic nouns, verbs, adjectives, or non-specific descriptions
+- If the entire text is itself a factual anchor (e.g. a single word answer, a short phrase), bracket the whole thing
+- Output ONLY the bracketed text, nothing else
+
+---
+
+Text: Who received the IEEE Frank Rosenblatt Award in 2010?
+Output: Who received the [IEEE Frank Rosenblatt Award] in [2010]?
+
+---
+
+Text: Michio Sugeno
+Output: [Michio Sugeno]
+
+---
+
+Text: What were the circumstances surrounding the appointment of Mirza Hameedullah Beg as Chief Justice of India in 1977, including who appointed him and the implications for judicial independence? Mirza Hameedullah Beg was appointed Chief Justice of India in January 1977 by the Indira Gandhi government, which was against legal tradition and sparked widespread protests regarding the independence of the judiciary. He was the second Muslim Chief Justice in India and served until his retirement in 1978.
+Output: What were the circumstances surrounding the appointment of [Mirza Hameedullah Beg] as [Chief Justice of India] in [1977], including who appointed him and the implications for judicial independence? [Mirza Hameedullah Beg] was appointed [Chief Justice of India] in [January 1977] by the [Indira Gandhi] government, which was against legal tradition and sparked widespread protests regarding the independence of the judiciary. He was the [second] Muslim Chief Justice in India and served until his retirement in [1978].
+
+---
+
+Text: The surgeon, identified as 'AM', was sentenced to one year of imprisonment in September 2009 for 'causing homicide through negligence'. He was disqualified from practicing medicine for three years and ordered to pay €120,000 (approximately US$176,000) in compensation to Stella Obasanjo's son.
+Output: The surgeon, identified as [AM], was sentenced to [one year] of imprisonment in [September 2009] for [causing homicide through negligence]. He was disqualified from practicing medicine for [three years] and ordered to pay [€120,000] (approximately [US$176,000]) in compensation to [Stella Obasanjo]'s son.
+
+---
+
+Text: The Canadian reality series *To Serve and Protect* debuted on KVOS-TV in 1993, created by Dwayne Mitchell and Dan Forrer for KF Media Inc.
+Output: The Canadian reality series [To Serve and Protect] debuted on [KVOS-TV] in [1993], created by [Dwayne Mitchell] and [Dan Forrer] for [KF Media Inc].
+
+---
+
+Text: EPOCHTODATE
+Output: [EPOCHTODATE]
+
+---
+
+Text: physics
+Output: [physics]
+
+---
+
+Text: Piano
+Output: [Piano]
+
+---
+
+Text: semantic maps, inference, graph, emotions
+Output: [semantic maps], [inference], [graph], [emotions]
+
+---
+
+Text: Adolf Anderssen was a highly successful chess player, winning over half of the European tournaments he participated in from 1851 to early 1878. He was recognized as the first modern chess master and had a peak rating over 2600, as estimated by Arpad Elo. Although he finished second in the Leipzig 1877 tournament, which was organized in his honor, his match record was weaker, with only two wins out of twelve matches. He was also awarded an honorary doctorate by Breslau University in 1865.
+Output: [Adolf Anderssen] was a highly successful chess player, winning over half of the European tournaments he participated in from [1851] to early [1878]. He was recognized as the first modern chess master and had a peak rating over [2600], as estimated by [Arpad Elo]. Although he finished [second] in the [Leipzig 1877] tournament, which was organized in his honor, his match record was weaker, with only [two] wins out of [twelve] matches. He was also awarded an honorary doctorate by [Breslau University] in [1865].
+
+---
