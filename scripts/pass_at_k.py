@@ -153,6 +153,7 @@ def main() -> None:
     parser.add_argument("--n-gpus", type=int, default=1, help="GPUs for generation")
     parser.add_argument("--tp-size", type=int, default=1, help="Tensor parallel size")
     parser.add_argument("--gpu-mem-util", type=float, default=0.8, help="GPU memory utilization")
+    parser.add_argument("--prompt-key", default="prompt", help="Column to use as prompt (default: prompt)")
     parser.add_argument("--cache-dir", default=None, help="Dataset cache directory")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of rows")
     parser.add_argument("--use-judge", default=True, action="store_true", help="Use OpenAI judge")
@@ -188,7 +189,7 @@ def main() -> None:
             "trainer.nnodes=1",
             f"trainer.n_gpus_per_node={args.n_gpus}",
             f"data.path={eval_path}",
-            "data.prompt_key=prompt",
+            f"data.prompt_key={args.prompt_key}",
             f"data.n_samples={args.top_k}",
             f"data.output_path={gen_out}",
             f"model.path={model_path}",

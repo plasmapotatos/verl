@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Restore original SimpleQA question/answer in an augmented parquet using id mapping."""
+"""Replace fields in a parquet by id-lookup from a larger base parquet (superset of ids)."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ import pandas as pd
 
 def _default_output_path(input_path: str) -> str:
     base = Path(input_path)
-    return str(base.with_name(base.stem + "_origqa" + base.suffix))
+    return str(base.with_name(base.stem + "_remap" + base.suffix))
 
 
 def _load_id_map(parquet_path: str) -> Dict[str, Dict[str, object]]:
@@ -41,14 +41,19 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, help="Input augmented parquet path")
     parser.add_argument(
-        "--base-parquet",
-        default="data/simpleqa/data.parquet",
-        help="Base parquet with original id/question/answer/prompt/reward_model",
+        "--base",
+        required=True,
+        help="Base parquet (superset of ids) with id/question/answer/prompt/reward_model",
     )
     parser.add_argument(
         "--output",
         default=None,
-        help="Output parquet path (defaults to input with _origqa suffix)",
+        help="Output parquet path (defaults to input with _remap suffix)",
+    )
+    parser.add_argument(
+        "--in-place",
+        action="store_true",
+        help="Overwrite the input file instead of writing to a new path",
     )
     parser.add_argument(
         "--preserve-answer-reward",
@@ -58,13 +63,13 @@ def main() -> None:
     args = parser.parse_args()
 
     input_path = args.input
-    output_path = args.output or _default_output_path(input_path)
+    output_path = input_path if args.in_place else (args.output or _default_output_path(input_path))
 
     df = pd.read_parquet(input_path)
     if "id" not in df.columns:
         raise ValueError("Input parquet missing 'id' column")
 
-    id_map = _load_id_map(args.base_parquet)
+    id_map = _load_id_map(args.base)
 
     def map_question(sample_id: str) -> object | None:
         entry = id_map.get(str(sample_id))

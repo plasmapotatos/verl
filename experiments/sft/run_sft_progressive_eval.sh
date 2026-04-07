@@ -469,7 +469,7 @@ run_generation () {
 		trainer.nnodes=1 \
 		trainer.n_gpus_per_node="$NGPU_GEN" \
 		data.path="$data_path" \
-		data.prompt_key=prompt \
+		data.prompt_key="${PROMPT_KEY:-prompt}" \
 		data.n_samples="$N_SAMPLES" \
 		data.output_path="$out_path" \
 		model.path="$merged_dir" \
@@ -543,7 +543,7 @@ run_base_eval () {
 				trainer.nnodes=1 \
 				trainer.n_gpus_per_node="$NGPU_GEN" \
 				data.path="$eval_path" \
-				data.prompt_key=prompt \
+				data.prompt_key="${PROMPT_KEY:-prompt}" \
 				data.n_samples="$N_SAMPLES" \
 				data.output_path="$gen_out_eval" \
 				model.path="$BASE_MODEL" \
