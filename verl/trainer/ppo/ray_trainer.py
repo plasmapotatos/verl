@@ -985,6 +985,46 @@ class RayPPOTrainer:
         with open(local_latest_checkpointed_iteration, "w") as f:
             f.write(str(self.global_steps))
 
+    def _cleanup_esi_checkpoints(self):
+        """Remove intermediate ESI-only checkpoints that are no longer needed for resume.
+
+        After a 'real' save (at a save_freq boundary or the last step), any
+        global_step_N dirs where N is NOT a multiple of save_freq and NOT the
+        last step are ESI jump-off points that can be safely deleted.
+        """
+        import shutil
+
+        ckpt_root = self.config.trainer.default_local_dir
+        save_freq = self.config.trainer.save_freq
+        if save_freq <= 0:
+            return
+
+        try:
+            ckpt_dirs = [
+                d for d in os.listdir(ckpt_root)
+                if d.startswith("global_step_") and os.path.isdir(os.path.join(ckpt_root, d))
+            ]
+        except FileNotFoundError:
+            return
+
+        removed = []
+        for d in ckpt_dirs:
+            try:
+                step = int(d.split("global_step_")[1])
+            except (ValueError, IndexError):
+                continue
+            # Keep: periodic saves, step 0, current step, and the final step
+            if step % save_freq == 0 or step == 0 or step == self.global_steps:
+                continue
+            # This is an intermediate ESI checkpoint — remove it
+            path = os.path.join(ckpt_root, d)
+            shutil.rmtree(path, ignore_errors=True)
+            removed.append(d)
+
+        if removed:
+            removed.sort(key=lambda x: int(x.split("global_step_")[1]))
+            print(f"Cleaned up {len(removed)} intermediate ESI checkpoint(s): {', '.join(removed)}", flush=True)
+
     def _load_checkpoint(self):
         if self.config.trainer.resume_mode == "disable":
             return 0
@@ -1369,15 +1409,21 @@ class RayPPOTrainer:
                     # 2. It's the last training step.
                     # 3. The current step number is a multiple of the save frequency.
                     # 4. The ESI(Elastic Server Instance)/training plan is close to expiration.
+                    is_periodic_save = self.global_steps % self.config.trainer.save_freq == 0
                     if self.config.trainer.save_freq > 0 and (
                         is_last_step
-                        or self.global_steps % self.config.trainer.save_freq == 0
+                        or is_periodic_save
                         or esi_close_to_expiration
                     ):
                         if esi_close_to_expiration:
                             print("Force saving checkpoint: ESI instance expiration approaching.", flush=True)
                         with marked_timer("save_checkpoint", timing_raw, color="green"):
                             self._save_checkpoint()
+
+                        # After a "real" save (periodic or last step), clean up any
+                        # intermediate ESI checkpoints that were only needed for resume.
+                        if is_periodic_save or is_last_step:
+                            self._cleanup_esi_checkpoints()
 
                 with marked_timer("stop_profile", timing_raw):
                     self._stop_profiling(do_profile)
