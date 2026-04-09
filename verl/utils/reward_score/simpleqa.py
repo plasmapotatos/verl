@@ -238,9 +238,9 @@ def compute_score(solution_str: str, ground_truth: str, ability: str = None, rew
         grade = _simpleqa_ternary_static_rule_grade(answer, str(ground_truth), ability)
     elif reward_mode == "ternary_adaptive":
         result = _simpleqa_ternary_adaptive_rule_grade(answer, str(ground_truth), ability)
-        print(f"Predicted answer: {answer}, Ground truth: {ground_truth}, Ability: {ability}, Score: {result['score']}")
+        # print(f"Predicted answer: {answer}, Ground truth: {ground_truth}, Ability: {ability}, Score: {result['score']}")
         return result
     else:
         raise ValueError(f"Unsupported reward mode: {reward_mode}")
-    print(f"Predicted answer: {answer}, Ground truth: {ground_truth}, Ability: {ability}, Score: {grade}")
+    # print(f"Predicted answer: {answer}, Ground truth: {ground_truth}, Ability: {ability}, Score: {grade}")
     return grade

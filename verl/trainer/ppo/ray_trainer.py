@@ -1375,7 +1375,7 @@ class RayPPOTrainer:
                         or esi_close_to_expiration
                     ):
                         if esi_close_to_expiration:
-                            print("Force saving checkpoint: ESI instance expiration approaching.")
+                            print("Force saving checkpoint: ESI instance expiration approaching.", flush=True)
                         with marked_timer("save_checkpoint", timing_raw, color="green"):
                             self._save_checkpoint()
 

@@ -8,7 +8,7 @@ VERL_DIR="${VERL_DIR:-/work/hdd/bbsg/twei2/rl/verl}"
 cd "$VERL_DIR"
 
 PROJECT_NAME=${PROJECT_NAME:-verl_examples}
-EXPERIMENT_NAME=${EXPERIMENT_NAME:-simpleqa_grpo}
+EXPERIMENT_NAME=${EXPERIMENT_NAME:-simpleqa_rpp}
 TRAIN_DATA=${TRAIN_DATA:-/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/rich_sft/simpleqa_rich_sft_train_origqa.parquet}
 VAL_DATA=${VAL_DATA:-$TRAIN_DATA}
 EVAL_DATA=${EVAL_DATA:-/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/augment/rich_sft/simpleqa_rich_sft_train_frac0.1_origqa.parquet}
@@ -56,6 +56,15 @@ NNODES=${NNODES:-1}
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1}
 REWARD_MODE=${REWARD_MODE:-binary}
 
+# REINFORCE++ specific knobs. By default we use token-level KL in the
+# reward (as in the official verl reinforce_plus_plus example) rather than
+# the GRPO-style KL-loss on the actor.
+ADV_ESTIMATOR=${ADV_ESTIMATOR:-reinforce_plus_plus}
+USE_KL_LOSS=${USE_KL_LOSS:-False}
+KL_LOSS_COEF=${KL_LOSS_COEF:-0.001}
+KL_LOSS_TYPE=${KL_LOSS_TYPE:-mse}
+USE_KL_IN_REWARD=${USE_KL_IN_REWARD:-True}
+
 CKPT_ROOT="outputs/rl/$PROJECT_NAME/$EXPERIMENT_NAME"
 PLOT_DIR=${PLOT_DIR:-"$CKPT_ROOT/plots"}
 ROLLOUT_DATA_DIR=${ROLLOUT_DATA_DIR:-"$CKPT_ROOT/rollouts"}
@@ -102,7 +111,7 @@ finalize_pass_at_k_dataset_outputs() {
 	[[ -f "$src_summary" ]] && mv "$src_summary" "$target_dir/pass_at_k.json"
 }
 
-grpo_train() {
+rpp_train() {
 	if [[ "$SKIP_TRAIN" == "1" ]]; then
 		return 0
 	fi
@@ -126,7 +135,7 @@ print(len(df))
 	fi
 
 	CUDA_VISIBLE_DEVICES="$CUDA_VISIBLE_DEVICES" python3 -m verl.trainer.main_ppo \
-		algorithm.adv_estimator=grpo \
+		algorithm.adv_estimator="$ADV_ESTIMATOR" \
 		data.train_files="$TRAIN_DATA" \
 		data.val_files="$VAL_DATA" \
 		data.train_batch_size="$TRAIN_BATCH_SIZE" \
@@ -140,9 +149,9 @@ print(len(df))
 		actor_rollout_ref.model.use_remove_padding=False \
 		actor_rollout_ref.actor.ppo_mini_batch_size="$PPO_MINI_BATCH_SIZE" \
 		actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu="$PPO_MICRO_BATCH_SIZE_PER_GPU" \
-		actor_rollout_ref.actor.use_kl_loss=True \
-		actor_rollout_ref.actor.kl_loss_coef=0.01 \
-		actor_rollout_ref.actor.kl_loss_type=low_var_kl \
+		actor_rollout_ref.actor.use_kl_loss="$USE_KL_LOSS" \
+		actor_rollout_ref.actor.kl_loss_coef="$KL_LOSS_COEF" \
+		actor_rollout_ref.actor.kl_loss_type="$KL_LOSS_TYPE" \
 		actor_rollout_ref.actor.entropy_coeff=0 \
 		actor_rollout_ref.model.enable_gradient_checkpointing=True \
 		actor_rollout_ref.actor.fsdp_config.param_offload=False \
@@ -157,7 +166,7 @@ print(len(df))
 		actor_rollout_ref.rollout.n="$ROLLOUT_N" \
 		actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu="$LOG_PROB_MICRO_BATCH_SIZE_PER_GPU" \
 		actor_rollout_ref.ref.fsdp_config.param_offload=True \
-		algorithm.use_kl_in_reward=False \
+		algorithm.use_kl_in_reward="$USE_KL_IN_REWARD" \
 		trainer.critic_warmup=0 \
 		trainer.logger='["console","wandb"]' \
 		trainer.project_name="$PROJECT_NAME" \
@@ -174,7 +183,7 @@ print(len(df))
 		reward_model.reward_mode="$REWARD_MODE"
 }
 
-grpo_eval() {
+rpp_eval() {
 	if [[ "$RUN_EVAL" != "1" ]]; then
 		return 0
 	fi
@@ -190,7 +199,7 @@ grpo_eval() {
 		"$USE_JUDGE"
 }
 
-grpo_pass_at_k() {
+rpp_pass_at_k() {
 	if [[ -z "$PASS_AT_K_EVAL_DATA" ]]; then
 		return 0
 	fi
@@ -223,7 +232,7 @@ grpo_pass_at_k() {
 	done
 }
 
-grpo_step0_pass_at_k() {
+rpp_step0_pass_at_k() {
 	if [[ -z "$PASS_AT_K_EVAL_DATA" ]]; then
 		return 0
 	fi
@@ -262,7 +271,7 @@ grpo_step0_pass_at_k() {
 	done
 }
 
-grpo_base_eval() {
+rpp_base_eval() {
 	if [[ "$RUN_BASE_EVAL" != "1" ]]; then
 		return 0
 	fi
@@ -325,7 +334,7 @@ grpo_base_eval() {
 	done
 }
 
-grpo_base_pass_at_k() {
+rpp_base_pass_at_k() {
 	if [[ "$RUN_BASE_PASS_AT_K" != "1" || -z "$PASS_AT_K_EVAL_DATA" ]]; then
 		return 0
 	fi
@@ -364,7 +373,7 @@ grpo_base_pass_at_k() {
 	done
 }
 
-grpo_plot() {
+rpp_plot() {
 	if [[ ! -d "$CKPT_ROOT" ]]; then
 		return 0
 	fi
@@ -375,7 +384,7 @@ grpo_plot() {
 		--output-dir "$PLOT_DIR"
 }
 
-grpo_prune() {
+rpp_prune() {
 	if [[ "$PRUNE_CHECKPOINTS" != "1" ]]; then
 		return 0
 	fi
@@ -383,19 +392,19 @@ grpo_prune() {
 	python3 "$VERL_DIR/scripts/prune_experiment_checkpoints.py" "$CKPT_ROOT"
 }
 
-grpo_run() {
-	grpo_train
-	grpo_eval
-	grpo_pass_at_k
-	grpo_step0_pass_at_k
-	grpo_base_eval
-	grpo_base_pass_at_k
-	grpo_plot
-	grpo_prune
+rpp_run() {
+	rpp_train
+	rpp_eval
+	rpp_pass_at_k
+	rpp_step0_pass_at_k
+	rpp_base_eval
+	rpp_base_pass_at_k
+	rpp_plot
+	rpp_prune
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
-	grpo_run
+	rpp_run
 	# Signal chain_job.sh that this script has completed all its work
 	[[ -n "${CHAIN_FLAG_FILE:-}" ]] && touch "$CHAIN_FLAG_FILE"
 fi

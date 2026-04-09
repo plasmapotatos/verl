@@ -68,8 +68,13 @@ class DataParallelPPOCritic(BasePPOCritic):
             batch, seqlen = input_ids.shape
             attention_mask = micro_batch["attention_mask"]
             position_ids = micro_batch["position_ids"]
-            if position_ids.dim() == 3:  # qwen2vl mrope
-                position_ids = position_ids.transpose(0, 1)
+            has_real_multi_modal_inputs = len(multi_modal_inputs) > 0
+            if has_real_multi_modal_inputs:
+                if position_ids.dim() == 3:  # qwen2vl mrope
+                    position_ids = position_ids.transpose(0, 1)
+            else:
+                # text-only path: derive canonical 2D position ids from attention mask
+                position_ids = torch.clamp(attention_mask.cumsum(dim=-1) - 1, min=0)
 
             if self.use_remove_padding:
                 input_ids_rmpad, indices, *_ = unpad_input(

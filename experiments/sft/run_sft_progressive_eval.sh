@@ -415,6 +415,7 @@ run_pass_at_k () {
 				--top-k "$PASS_AT_K_TOP_K" \
 				--top-p "$PASS_AT_K_TOP_P" \
 				--temperature "$PASS_AT_K_TEMPERATURE" \
+				--prompt-key "${PROMPT_KEY:-prompt}" \
 				--use-judge
 		done
 		return
@@ -448,6 +449,7 @@ run_pass_at_k () {
 				--top-k "$PASS_AT_K_TOP_K" \
 				--top-p "$PASS_AT_K_TOP_P" \
 				--temperature "$PASS_AT_K_TEMPERATURE" \
+				--prompt-key "${PROMPT_KEY:-prompt}" \
 				--use-judge
 		done
 		done
@@ -575,6 +577,7 @@ run_base_eval () {
 					--top-k "$PASS_AT_K_TOP_K" \
 					--top-p "$PASS_AT_K_TOP_P" \
 					--temperature "$PASS_AT_K_TEMPERATURE" \
+					--prompt-key "${PROMPT_KEY:-prompt}" \
 					--use-judge
 			done
 		fi
@@ -855,3 +858,6 @@ if [[ -n "$EVAL_DATA" ]]; then
 		--project-dir "$ROOT" \
 		--output-dir "$ROOT/plots"
 fi
+
+# Signal chain_job.sh that this script has completed all its work
+[[ -n "${CHAIN_FLAG_FILE:-}" ]] && touch "$CHAIN_FLAG_FILE"

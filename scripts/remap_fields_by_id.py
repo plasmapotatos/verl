@@ -18,7 +18,7 @@ def _default_output_path(input_path: str) -> str:
 
 def _load_id_map(parquet_path: str) -> Dict[str, Dict[str, object]]:
     df = pd.read_parquet(parquet_path)
-    required = {"id", "question", "answer", "prompt", "reward_model"}
+    required = {"id", "question", "answer", "prompt", "reward_model", "ability"}
     missing = required - set(df.columns)
     if missing:
         raise ValueError(f"Missing columns in parquet: {sorted(missing)}")
@@ -33,6 +33,7 @@ def _load_id_map(parquet_path: str) -> Dict[str, Dict[str, object]]:
             "answer": row["answer"],
             "prompt": row["prompt"],
             "reward_model": row["reward_model"],
+            "ability": row["ability"],
         }
     return id_map
 
@@ -42,8 +43,8 @@ def main() -> None:
     parser.add_argument("--input", required=True, help="Input augmented parquet path")
     parser.add_argument(
         "--base",
-        required=True,
-        help="Base parquet (superset of ids) with id/question/answer/prompt/reward_model",
+        default="data/simpleqa/data.parquet",
+        help="Base parquet (superset of ids) with id/question/answer/prompt/reward_model/ability (default: data/simpleqa/data.parquet)",
     )
     parser.add_argument(
         "--output",
@@ -86,6 +87,10 @@ def main() -> None:
     def map_reward_model(sample_id: str) -> object | None:
         entry = id_map.get(str(sample_id))
         return entry["reward_model"] if entry else None
+    
+    def map_ability(sample_id: str) -> object | None:
+        entry = id_map.get(str(sample_id))
+        return entry["ability"] if entry else None
 
     updated = df.copy()
     updated["question"] = updated["id"].map(map_question)

@@ -77,6 +77,10 @@ class DataParallelPPOActor(BasePPOActor):
         )
         self.device_name = get_device_name()
 
+    @staticmethod
+    def _shape_or_none(x):
+        return tuple(x.shape) if x is not None else None
+
     def _forward_micro_batch(
         self, micro_batch, temperature, calculate_entropy=False
     ) -> tuple[torch.Tensor, torch.Tensor]:
@@ -103,8 +107,13 @@ class DataParallelPPOActor(BasePPOActor):
             attention_mask = micro_batch["attention_mask"]
             position_ids = micro_batch["position_ids"]
             entropy = None
-            if position_ids.dim() == 3:  # qwen2vl mrope
-                position_ids = position_ids.transpose(0, 1)  # (bsz, 3, seqlen) -> (3, bsz, seqlen)
+            has_real_multi_modal_inputs = len(multi_modal_inputs) > 0
+            if has_real_multi_modal_inputs:
+                if position_ids.dim() == 3:  # qwen2vl mrope
+                    position_ids = position_ids.transpose(0, 1)  # (bsz, 3, seqlen) -> (3, bsz, seqlen)
+            else:
+                # text-only path: derive canonical 2D position ids from attention mask
+                position_ids = torch.clamp(attention_mask.cumsum(dim=-1) - 1, min=0)
 
             if self.use_remove_padding:
                 input_ids_rmpad, indices, cu_seqlens, *_ = unpad_input(
@@ -164,14 +173,32 @@ class DataParallelPPOActor(BasePPOActor):
                     extra_args["temperature"] = temperature
                     extra_args["return_dict"] = True
 
-                output = self.actor_module(
-                    input_ids=input_ids_rmpad,
-                    attention_mask=None,
-                    position_ids=position_ids_rmpad,
-                    **multi_modal_inputs,
-                    use_cache=False,
-                    **extra_args,
-                )  # prevent model thinks we are generating
+                try:
+                    output = self.actor_module(
+                        input_ids=input_ids_rmpad,
+                        attention_mask=None,
+                        position_ids=position_ids_rmpad,
+                        **multi_modal_inputs,
+                        use_cache=False,
+                        **extra_args,
+                    )  # prevent model thinks we are generating
+                except Exception:
+                    logger.exception(
+                        "actor_module forward failed in rmpad path: input_ids=%s attention_mask=%s "
+                        "position_ids_raw=%s position_ids_norm=%s input_ids_rmpad=%s position_ids_rmpad=%s "
+                        "has_multi_modal_inputs=%s multi_modal_keys=%s use_remove_padding=%s use_ulysses_sp=%s",
+                        self._shape_or_none(input_ids),
+                        self._shape_or_none(attention_mask),
+                        self._shape_or_none(micro_batch.get("position_ids")),
+                        self._shape_or_none(position_ids),
+                        self._shape_or_none(input_ids_rmpad),
+                        self._shape_or_none(position_ids_rmpad),
+                        has_real_multi_modal_inputs,
+                        sorted(list(multi_modal_inputs.keys())),
+                        self.use_remove_padding,
+                        self.use_ulysses_sp,
+                    )
+                    raise
 
                 if self.use_fused_kernels:
                     log_probs = output.log_probs.squeeze(0)  # (total_nnz,)
@@ -242,14 +269,27 @@ class DataParallelPPOActor(BasePPOActor):
                     extra_args["temperature"] = temperature
                     extra_args["return_dict"] = True
 
-                output = self.actor_module(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    position_ids=position_ids,
-                    **multi_modal_inputs,
-                    use_cache=False,
-                    **extra_args,
-                )  # prevent model thinks we are generating
+                try:
+                    output = self.actor_module(
+                        input_ids=input_ids,
+                        attention_mask=attention_mask,
+                        position_ids=position_ids,
+                        **multi_modal_inputs,
+                        use_cache=False,
+                        **extra_args,
+                    )  # prevent model thinks we are generating
+                except Exception:
+                    logger.exception(
+                        "actor_module forward failed in dense path: input_ids=%s attention_mask=%s "
+                        "position_ids_raw=%s position_ids_norm=%s has_multi_modal_inputs=%s multi_modal_keys=%s",
+                        self._shape_or_none(input_ids),
+                        self._shape_or_none(attention_mask),
+                        self._shape_or_none(micro_batch.get("position_ids")),
+                        self._shape_or_none(position_ids),
+                        has_real_multi_modal_inputs,
+                        sorted(list(multi_modal_inputs.keys())),
+                    )
+                    raise
 
                 if self.use_fused_kernels:
                     log_probs = output.log_probs[:, -response_length - 1 : -1]

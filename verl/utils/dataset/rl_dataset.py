@@ -262,7 +262,9 @@ class RLHFDataset(Dataset):
                 model_inputs.pop("second_per_grid_ts")
 
             # There's a trap here, multi_modal_inputs has to be a dict, not BatchFeature
-            row_dict["multi_modal_data"] = multi_modal_data
+            # Only set multi_modal_data if non-empty to avoid passing it to text-only models
+            if multi_modal_data:
+                row_dict["multi_modal_data"] = multi_modal_data
 
             # We will do batch.union() in the trainer,
             # so we cannot have "multi_modal_inputs" in row_dict if rollout generates new multi_modal_inputs
