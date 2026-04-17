@@ -61,8 +61,9 @@ else
     mkdir -p "$DEST"
     rsync -av "${EXCLUDES[@]}" "$SRC/" "$DEST/"
 
-    # Make everything world-readable
+    # Make everything world-readable, directories world-writable so others can add files
     chmod -R a+rX "$DEST"
+    find "$DEST" -type d -exec chmod a+rwx {} +
 
     FINAL_SIZE=$(du -sh "$DEST" | cut -f1)
     echo ""
