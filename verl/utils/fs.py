@@ -290,3 +290,66 @@ def local_mkdir_safe(path):
         os.makedirs(path, exist_ok=True)
 
     return path
+
+
+def atomic_torch_save(obj, path, **kwargs):
+    """Save a torch checkpoint atomically by writing to a temp file then renaming.
+
+    This prevents corruption if the process is killed mid-write.
+    """
+    import torch
+
+    dir_name = os.path.dirname(path)
+    fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+    os.close(fd)
+    try:
+        torch.save(obj, tmp_path, **kwargs)
+        os.replace(tmp_path, path)
+    except BaseException:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise
+
+
+def atomic_save_parquet(df, path):
+    """Save a pandas DataFrame to parquet atomically."""
+    dir_name = os.path.dirname(path)
+    fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+    os.close(fd)
+    try:
+        df.to_parquet(tmp_path)
+        os.replace(tmp_path, path)
+    except BaseException:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise
+
+
+def atomic_save_json(obj, path, **kwargs):
+    """Save a JSON object to a file atomically."""
+    import json
+
+    dir_name = os.path.dirname(path)
+    fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            json.dump(obj, f, **kwargs)
+        os.replace(tmp_path, path)
+    except BaseException:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise
+
+
+def atomic_write_text(text, path):
+    """Write text to a file atomically."""
+    dir_name = os.path.dirname(path)
+    fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            f.write(text)
+        os.replace(tmp_path, path)
+    except BaseException:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise

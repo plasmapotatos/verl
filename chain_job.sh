@@ -2,7 +2,7 @@
 #SBATCH --account=bbsg-dtai-gh
 #SBATCH --partition=ghx4-interactive
 #SBATCH --nodes=1
-#SBATCH --gpus-per-node=2
+#SBATCH --gpus-per-node=4
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=64
 #SBATCH --mem=0
@@ -25,7 +25,7 @@ MAX_ITERS=20
 WORKDIR="/work/hdd/bbsg/twei2/rl/verl"
 CHAIN_ROOT="${WORKDIR}/chain_state"
 LOG_ROOT="${WORKDIR}/logs/chain"
-DEFAULT_GPUS=2
+DEFAULT_GPUS=4
 
 DEFAULT_TIME="02:00:00"
 
@@ -203,7 +203,8 @@ srun $VERL bash -c "source /work/hdd/bbsg/twei2/rl/verl_container_rc.sh && \
                     cd ${WORKDIR} && \
                     RUN_ID='${RUN_ID}' CHAIN_DIR='${CHAIN_DIR}' CHAIN_FLAG_FILE='${FLAG_FILE}' \
                     MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP='${JOB_END_TS}' \
-                    bash '${TARGET_SCRIPT}'"
+                    PYTHONUNBUFFERED=1 \
+                    stdbuf -oL -eL bash '${TARGET_SCRIPT}'"
 TARGET_RC=$?
 set -e
 

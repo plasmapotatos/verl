@@ -520,7 +520,7 @@ class FSDPSFTTrainer:
 
     def save_checkpoint(self, step):
         """Save checkpoint using FSDPCheckpointManager with improved tracking"""
-        from verl.utils.fs import local_mkdir_safe
+        from verl.utils.fs import atomic_torch_save, local_mkdir_safe
 
         # Determine checkpoint path
         local_global_step_folder = os.path.join(self.config.trainer.default_local_dir, f"global_step_{step}")
@@ -543,7 +543,7 @@ class FSDPSFTTrainer:
 
             # Use StatefulDataLoader's built-in state dict functionality
             dataloader_state_dict = self.train_dataloader.state_dict()
-            torch.save(dataloader_state_dict, dataloader_local_path)
+            atomic_torch_save(dataloader_state_dict, dataloader_local_path)
             print(f"Saved dataloader state to: {dataloader_local_path}")
 
             # Update latest checkpoint tracker (atomic write)

@@ -34,7 +34,7 @@ from verl import DataProto
 from verl.protocol import pad_dataproto_to_divisor, unpad_dataproto
 from verl.single_controller.ray import RayClassWithInitArgs, RayResourcePool, RayWorkerGroup
 from verl.utils import hf_tokenizer
-from verl.utils.fs import copy_to_local
+from verl.utils.fs import atomic_save_parquet, copy_to_local
 from verl.utils.hdfs_io import makedirs
 from verl.utils.model import compute_position_id_with_mask
 from verl.workers.fsdp_workers import ActorRolloutRefWorker
@@ -148,7 +148,7 @@ def main_task(config):
     # write to a new parquet
     output_dir = os.path.dirname(config.data.output_path)
     makedirs(output_dir, exist_ok=True)
-    dataset.to_parquet(config.data.output_path)
+    atomic_save_parquet(dataset, config.data.output_path)
 
 
 if __name__ == "__main__":

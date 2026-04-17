@@ -1,9 +1,9 @@
 #!/bin/bash
-# Copy a file or folder to /tmp/shared/ for sharing with coworkers,
+# Copy a file or folder to /work/hdd/bbsg/shared for sharing with coworkers,
 # stripping out large model weight files (.pt, .safetensors, .bin, .ckpt).
 #
 # Usage: ./scripts/share_experiment.sh <path> [dest_base]
-#   dest_base defaults to /tmp/shared
+#   dest_base defaults to /work/hdd/bbsg/shared
 
 set -euo pipefail
 
@@ -15,7 +15,7 @@ if [ $# -lt 1 ]; then
 fi
 
 SRC="$(realpath "$1")"
-DEST_BASE="${2:-/tmp/shared}"
+DEST_BASE="${2:-/work/hdd/bbsg/shared}"
 
 if [ ! -e "$SRC" ]; then
     echo "Error: $SRC does not exist"

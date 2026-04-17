@@ -98,7 +98,7 @@ def default_compute_score(
     elif data_source == "simpleqa":
         from . import simpleqa
 
-        res = simpleqa.compute_score(solution_str, ground_truth, ability, reward_mode=reward_mode)
+        res = simpleqa.compute_score(solution_str, ground_truth, ability, reward_mode=reward_mode, extra_info=extra_info)
     elif data_source in [
         "searchR1_nq",
         "searchR1_triviaqa",

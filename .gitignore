@@ -5,6 +5,7 @@ royaldelivery/
 chain_state/
 core
 results/
+shared/
 
 **/*.pt
 **/checkpoints

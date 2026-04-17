@@ -928,7 +928,7 @@ class RayPPOTrainer:
             )
 
     def _save_checkpoint(self):
-        from verl.utils.fs import local_mkdir_safe
+        from verl.utils.fs import atomic_torch_save, atomic_write_text, local_mkdir_safe
 
         # path: given_path + `/global_step_{global_steps}` + `/actor`
         local_global_step_folder = os.path.join(
@@ -976,14 +976,13 @@ class RayPPOTrainer:
         local_mkdir_safe(local_global_step_folder)
         dataloader_local_path = os.path.join(local_global_step_folder, "data.pt")
         dataloader_state_dict = self.train_dataloader.state_dict()
-        torch.save(dataloader_state_dict, dataloader_local_path)
+        atomic_torch_save(dataloader_state_dict, dataloader_local_path)
 
-        # latest checkpointed iteration tracker (for atomic usage)
+        # latest checkpointed iteration tracker (atomic write to prevent corruption on kill)
         local_latest_checkpointed_iteration = os.path.join(
             self.config.trainer.default_local_dir, "latest_checkpointed_iteration.txt"
         )
-        with open(local_latest_checkpointed_iteration, "w") as f:
-            f.write(str(self.global_steps))
+        atomic_write_text(str(self.global_steps), local_latest_checkpointed_iteration)
 
     def _cleanup_esi_checkpoints(self):
         """Remove intermediate ESI-only checkpoints that are no longer needed for resume.

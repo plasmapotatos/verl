@@ -139,10 +139,9 @@ def run(
     metrics = compute_metrics(evaluations)
     output = {"metrics": json_safe(metrics), "rows": rows}
 
-    import json
+    from verl.utils.fs import atomic_save_json
 
-    with open(output_json, "w", encoding="utf-8") as f:
-        json.dump(output, f, ensure_ascii=False, indent=2)
+    atomic_save_json(output, output_json, ensure_ascii=False, indent=2)
 
     logger.info("Saved evaluation output", extra={"output": output_json})
 

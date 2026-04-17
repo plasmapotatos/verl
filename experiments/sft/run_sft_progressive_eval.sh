@@ -27,7 +27,7 @@ export RAY_USAGE_STATS_ENABLED=0
 #   CLM_TRUNCATION truncation mode for CLM (default: "right")
 #   TRAIN_BATCH_SIZE (default: 64)
 #   SEED           (default: 1)
-#   NPROC          (default: 1)
+#   NPROC          (default: 4)
 #   NGPU_GEN       (default: 1)
 #   TP_SIZE        (default: 1)
 #   TEMP           (default: 0)
@@ -76,7 +76,7 @@ CLM_MAX_LEN="${CLM_MAX_LEN:-4096}"
 CLM_TRUNCATION="${CLM_TRUNCATION:-right}"
 
 # Training launcher settings
-NPROC="${NPROC:-1}"
+NPROC="${NPROC:-4}"
 
 # Fixed hyperparams
 TRAIN_BATCH_SIZE="${TRAIN_BATCH_SIZE:-64}"
@@ -85,7 +85,7 @@ MODEL_DTYPE="${MODEL_DTYPE:-bf16}"
 
 # Generation settings
 N_SAMPLES="${N_SAMPLES:-1}"
-NGPU_GEN="${NGPU_GEN:-1}"
+NGPU_GEN="${NGPU_GEN:-4}"
 TP_SIZE="${TP_SIZE:-1}"
 TEMP="${TEMP:-0}"
 PROMPT_LEN="${PROMPT_LEN:-2048}"
@@ -397,8 +397,8 @@ run_pass_at_k () {
 			return
 		fi
 		merged_dir="$ckpt_dir/merged_hf_model"
-		if [[ ! -d "$merged_dir" ]]; then
-			echo "Skipping $exp_name (missing merged_hf_model under $ckpt_dir)"
+		if [[ ! -d "$merged_dir" || -z "$(ls -A "$merged_dir" 2>/dev/null)" ]]; then
+			echo "Skipping $exp_name (missing or empty merged_hf_model under $ckpt_dir)"
 			return
 		fi
 
@@ -431,8 +431,8 @@ run_pass_at_k () {
 	sorted_ckpts=( $(printf '%s\n' "${ckpt_dirs[@]}" | sort -V) )
 	for ckpt_dir in "${sorted_ckpts[@]}"; do
 		merged_dir="$ckpt_dir/merged_hf_model"
-		if [[ ! -d "$merged_dir" ]]; then
-			echo "Skipping $exp_name @ $ckpt_dir (missing merged_hf_model)"
+		if [[ ! -d "$merged_dir" || -z "$(ls -A "$merged_dir" 2>/dev/null)" ]]; then
+			echo "Skipping $exp_name @ $ckpt_dir (missing or empty merged_hf_model)"
 			continue
 		fi
 		step="$(basename "$ckpt_dir")"

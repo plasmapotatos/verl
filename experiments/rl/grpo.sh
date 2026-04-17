@@ -19,10 +19,10 @@ if [[ -n "$SFT_DIR" && -z "${MODEL_PATH:-}" ]]; then
 		echo "ERROR: no global_step_* checkpoint found in SFT_DIR=$SFT_DIR" >&2
 		exit 1
 	fi
-	if [[ -d "$LATEST_SFT_CKPT/merged_hf_model" ]]; then
+	if [[ -d "$LATEST_SFT_CKPT/merged_hf_model" && -n "$(ls -A "$LATEST_SFT_CKPT/merged_hf_model" 2>/dev/null)" ]]; then
 		MODEL_PATH="$LATEST_SFT_CKPT/merged_hf_model"
 	else
-		echo "ERROR: $LATEST_SFT_CKPT/merged_hf_model does not exist" >&2
+		echo "ERROR: $LATEST_SFT_CKPT/merged_hf_model does not exist or is empty" >&2
 		echo "Available contents: $(ls "$LATEST_SFT_CKPT")" >&2
 		exit 1
 	fi
@@ -45,13 +45,13 @@ PROMPT_LEN=${PROMPT_LEN:-1024}
 RESP_LEN=${RESP_LEN:-256}
 TRAIN_BATCH_SIZE=${TRAIN_BATCH_SIZE:-64}
 PPO_MINI_BATCH_SIZE=${PPO_MINI_BATCH_SIZE:-32}
-PPO_MICRO_BATCH_SIZE_PER_GPU=${PPO_MICRO_BATCH_SIZE_PER_GPU:-2}
-LOG_PROB_MICRO_BATCH_SIZE_PER_GPU=${LOG_PROB_MICRO_BATCH_SIZE_PER_GPU:-2}
+PPO_MICRO_BATCH_SIZE_PER_GPU=${PPO_MICRO_BATCH_SIZE_PER_GPU:-8}
+LOG_PROB_MICRO_BATCH_SIZE_PER_GPU=${LOG_PROB_MICRO_BATCH_SIZE_PER_GPU:-8}
 ROLLOUT_NAME=${ROLLOUT_NAME:-vllm}
 ROLLOUT_N=${ROLLOUT_N:-8}
 TOTAL_EPOCHS=${TOTAL_EPOCHS:-10}
 SAVE_FREQ=${SAVE_FREQ:-200}
-N_GPUS_PER_NODE=${N_GPUS_PER_NODE:-2}
+N_GPUS_PER_NODE=${N_GPUS_PER_NODE:-4}
 NNODES=${NNODES:-1}
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1}
 REWARD_MODE=${REWARD_MODE:-binary}
@@ -148,9 +148,9 @@ print(len(df))
 		actor_rollout_ref.actor.fsdp_config.param_offload=False \
 		actor_rollout_ref.actor.fsdp_config.optimizer_offload=False \
 		actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu="$LOG_PROB_MICRO_BATCH_SIZE_PER_GPU" \
-		actor_rollout_ref.rollout.tensor_model_parallel_size=2 \
+		actor_rollout_ref.rollout.tensor_model_parallel_size=1 \
 		actor_rollout_ref.rollout.name="$ROLLOUT_NAME" \
-		actor_rollout_ref.rollout.gpu_memory_utilization=0.8 \
+		actor_rollout_ref.rollout.gpu_memory_utilization=0.9 \
 		actor_rollout_ref.rollout.enable_chunked_prefill=False \
 		actor_rollout_ref.rollout.enforce_eager=False \
 		actor_rollout_ref.rollout.free_cache_engine=True \
