@@ -71,7 +71,17 @@ def main_task(config):
 
     # read dataset. Note that the dataset should directly contain chat template format (e.g., a list of dictionary)
     dataset = pd.read_parquet(config.data.path)
-    chat_lst = dataset[config.data.prompt_key].tolist()
+
+    prompt_key = config.data.prompt_key
+    if prompt_key not in dataset.columns:
+        if "question" in dataset.columns:
+            print(f"[main_generation] prompt_key={prompt_key!r} not in parquet; falling back to 'question'")
+            prompt_key = "question"
+        else:
+            raise KeyError(
+                f"prompt_key={prompt_key!r} not in parquet columns {list(dataset.columns)}"
+            )
+    chat_lst = dataset[prompt_key].tolist()
 
     def _to_chat(chat):
         if isinstance(chat, str):
@@ -81,6 +91,18 @@ def main_task(config):
         return chat
 
     chat_lst = [_to_chat(chat) for chat in chat_lst]
+
+    # If an `added_prefix` column exists, append it as an assistant turn so the model
+    # continues from that prefix (via continue_final_message=True in apply_chat_template).
+    use_prefix = "added_prefix" in dataset.columns
+    if use_prefix:
+        print("[main_generation] detected 'added_prefix' column; forcing assistant prefix via continue_final_message")
+        prefix_lst = dataset["added_prefix"].tolist()
+        prefix_lst = ["" if p is None else str(p) for p in prefix_lst]
+        chat_lst = [
+            chat + [{"role": "assistant", "content": prefix}]
+            for chat, prefix in zip(chat_lst, prefix_lst)
+        ]
 
     tokenizer.padding_side = "left"
     if tokenizer.pad_token is None:
@@ -103,9 +125,7 @@ def main_task(config):
     for batch_idx in range(num_batch):
         print(f"[{batch_idx + 1}/{num_batch}] Start to process.")
         batch_chat_lst = chat_lst[batch_idx * config_batch_size : (batch_idx + 1) * config_batch_size]
-        inputs = tokenizer.apply_chat_template(
-            batch_chat_lst,
-            add_generation_prompt=True,
+        template_kwargs = dict(
             padding=True,
             truncation=True,
             max_length=config.rollout.prompt_length,
@@ -113,6 +133,12 @@ def main_task(config):
             return_dict=True,
             tokenize=True,
         )
+        if use_prefix:
+            template_kwargs["add_generation_prompt"] = False
+            template_kwargs["continue_final_message"] = True
+        else:
+            template_kwargs["add_generation_prompt"] = True
+        inputs = tokenizer.apply_chat_template(batch_chat_lst, **template_kwargs)
         input_ids = inputs["input_ids"]
         attention_mask = inputs["attention_mask"]
         position_ids = compute_position_id_with_mask(attention_mask)

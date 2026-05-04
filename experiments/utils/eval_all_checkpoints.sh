@@ -35,12 +35,9 @@ for CKPT_DIR in $CKPT_DIRS; do
         MERGED_DIR="$MODEL_PATH"
     else
         MERGED_DIR="$CKPT_DIR/merged_hf_model"
-        if [[ ! -d "$MERGED_DIR" ]]; then
-            echo "merged_hf_model not found for $STEP_NAME, attempting merge."
-            bash /work/hdd/bbsg/twei2/rl/verl/experiments/utils/merge_checkpoint.sh "$CKPT_DIR"
-        fi
-        if [[ ! -d "$MERGED_DIR" ]]; then
-            echo "merged_hf_model still missing for $STEP_NAME, skipping."
+        bash /work/hdd/bbsg/twei2/rl/verl/experiments/utils/merge_checkpoint.sh "$CKPT_DIR"
+        if [[ ! -f "$MERGED_DIR/config.json" ]]; then
+            echo "merged_hf_model missing or invalid for $STEP_NAME, skipping."
             continue
         fi
     fi

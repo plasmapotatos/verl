@@ -59,7 +59,10 @@ def _ensure_default_rewriters_loaded() -> None:
     from .rewriters import (  # type: ignore
         llm_rewriter,
         factual_anchor_brackets,
+        factual_anchor_typed,
+        inverse_qa,
         simpleqa_clm,
+        simpleqa_n_paraphrase,
         simpleqa_refusal,
         rich_qa,
         simpleqa_web_search,

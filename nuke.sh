@@ -4,15 +4,51 @@
 
 set -uo pipefail
 
-WORKDIR="/work/hdd/bbsg/twei2/rl/verl"
-CHAIN_ROOT="${WORKDIR}/chain_state"
+DEFAULT_WORKDIR="/work/hdd/bbsg/twei2/rl/verl"
+WORKDIR="${NUKE_WORKDIR:-$DEFAULT_WORKDIR}"
+CHAIN_ROOT="${NUKE_CHAIN_ROOT:-${WORKDIR}/chain_state}"
 
-if [[ $# -lt 1 ]]; then
-    echo "Usage: $0 <job_id> [<job_id> ...]" >&2
-    echo "       Looks up each job's name (expects 'chain_<RUN_ID>'), touches" >&2
-    echo "       \${CHAIN_ROOT}/<RUN_ID>/stop.flag, then scancels the job." >&2
+usage() {
+    cat >&2 <<EOF
+Usage: $0 [--workdir PATH | --chain-root PATH] <job_id> [<job_id> ...]
+       Looks up each job's name (expects 'chain_<RUN_ID>'), touches
+       \${CHAIN_ROOT}/<RUN_ID>/stop.flag, then scancels the job.
+
+Options:
+  --workdir PATH     Project root whose chain_state/ holds the stop.flag.
+                     Defaults to \$NUKE_WORKDIR or ${DEFAULT_WORKDIR}.
+  --chain-root PATH  Override the chain_state dir directly (takes precedence
+                     over --workdir). Defaults to \$NUKE_CHAIN_ROOT or
+                     \$WORKDIR/chain_state.
+EOF
     exit 1
+}
+
+JOBIDS=()
+CHAIN_ROOT_EXPLICIT=0
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --workdir) [[ $# -ge 2 ]] || usage; WORKDIR="$2"; shift 2 ;;
+        --workdir=*) WORKDIR="${1#--workdir=}"; shift ;;
+        --chain-root) [[ $# -ge 2 ]] || usage; CHAIN_ROOT="$2"; CHAIN_ROOT_EXPLICIT=1; shift 2 ;;
+        --chain-root=*) CHAIN_ROOT="${1#--chain-root=}"; CHAIN_ROOT_EXPLICIT=1; shift ;;
+        -h|--help) usage ;;
+        -*) echo "Unknown option: $1" >&2; usage ;;
+        *) JOBIDS+=("$1"); shift ;;
+    esac
+done
+
+# If --workdir was set but --chain-root wasn't, re-derive CHAIN_ROOT from the
+# (possibly-updated) WORKDIR.
+if [[ "$CHAIN_ROOT_EXPLICIT" -eq 0 ]]; then
+    CHAIN_ROOT="${NUKE_CHAIN_ROOT:-${WORKDIR}/chain_state}"
 fi
+
+if [[ ${#JOBIDS[@]} -lt 1 ]]; then
+    usage
+fi
+
+set -- "${JOBIDS[@]}"
 
 for JOBID in "$@"; do
     echo "=== nuke job ${JOBID} ==="

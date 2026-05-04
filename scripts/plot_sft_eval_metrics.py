@@ -380,6 +380,14 @@ def _plot_combined(points: List[EvalPoint], output_dir: Path) -> None:
     _plot_combined_metric_set(
         points,
         combined_dir,
+        title="accuracy across datasets",
+        filename="accuracy_all_datasets_by_step.png",
+        metric_predicate=lambda m: m == "accuracy",
+        linestyle_fn=lambda _: "-",
+    )
+    _plot_combined_metric_set(
+        points,
+        combined_dir,
         title="accuracy + pass@k across datasets",
         filename="accuracy_and_passk_all_datasets_by_step.png",
         metric_predicate=lambda m: m == "accuracy" or m.startswith("pass_at_k"),

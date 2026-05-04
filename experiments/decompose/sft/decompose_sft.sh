@@ -8,7 +8,7 @@ TRAIN_DATA="data/simpleqa/partition/decompose/sft/train.parquet"
 
 # train_eval.parquet: full decomposed eval (all sub-QAs for the frac0.1 orig ids)
 # train_eval_origqa.parquet: the 275 original questions those decompositions cover
-EVAL_DATA="data/simpleqa/partition/decompose/sft/train_eval.parquet data/simpleqa/partition/decompose/sft/train_eval_origqa.parquet"
+EVAL_DATA="data/simpleqa/partition/decompose/sft/train_eval.parquet data/simpleqa/partition/decompose/sft/train_eval_origqa.parquet data/simpleqa/partition/rich_qa/sft/train_eval_richqa.parquet"
 
 PASS_AT_K_EVAL_DATA="data/simpleqa/partition/decompose/sft/train_eval_origqa.parquet"
 

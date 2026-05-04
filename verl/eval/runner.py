@@ -44,6 +44,10 @@ def run(
     if limit is not None:
         df = df.head(limit)
 
+    prefix_column = "added_prefix" if "added_prefix" in df.columns else None
+    if prefix_column:
+        logger.info("Detected 'added_prefix' column; prepending per-sample to responses before grading")
+
     total_rows = len(df)
     logger.info("Loaded predictions", extra={"rows": total_rows})
 
@@ -55,6 +59,12 @@ def run(
     def _eval_record(index: int, record: Dict[str, Any]) -> Tuple[int, Dict[str, Any], List[str]]:
         sample_id = coerce_id(record)
         responses = coerce_responses(record)
+        # if prefix_column:
+        #     prefix_val = record.get(prefix_column, "") or ""
+        #     if not isinstance(prefix_val, str):
+        #         prefix_val = str(prefix_val)
+        #     if prefix_val:
+        #         responses = [prefix_val + r for r in responses]
         graders: List[Dict[str, Any]] = []
         evaluations_local: List[str] = []
 

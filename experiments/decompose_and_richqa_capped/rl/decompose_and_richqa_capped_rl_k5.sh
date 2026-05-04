@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_NAME="simpleqa_decompose_and_richqa_capped_grpo"
-EXPERIMENT_NAME="binary_decompose_and_richqa_capped"
+EXPERIMENT_NAME="binary_decompose_and_richqa_capped_k5"
 
 SFT_PROJECT="simpleqa_decompose_and_richqa_capped_sft_k5"
 SFT_EXP_GLOB="sft_lr1.5e-4_epmax30_seed1"

@@ -1,0 +1,9 @@
+You merge multiple related Q/A pairs into a single combined question and answer. The combined question must ask for every fact covered by the inputs in one natural-sounding sentence. The combined answer must contain every original answer, in the same order as the questions appear, joined naturally.
+
+Example:
+Inputs:
+  Q: Who won X award in 2010?  A: Alice
+  Q: Who won X award in 2012?  A: Bob
+Output JSON: {"question": "Who won X award in 2010 and who won it in 2012?", "answer": "Alice in 2010 and Bob in 2012."}
+
+Respond with ONLY a JSON object with keys "question" and "answer". No markdown, no extra text.

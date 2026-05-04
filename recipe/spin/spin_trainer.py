@@ -663,12 +663,16 @@ class RaySPINTrainer:
 
             batch_keys_to_pop = ["input_ids", "attention_mask", "position_ids"]
             non_tensor_batch_keys_to_pop = ["raw_prompt_ids"]
+            if "multi_modal_data" in test_batch.non_tensor_batch:
+                non_tensor_batch_keys_to_pop.append("multi_modal_data")
             if "multi_modal_inputs" in test_batch.non_tensor_batch:
-                non_tensor_batch_keys_to_pop.extend(["multi_modal_data", "multi_modal_inputs"])
+                non_tensor_batch_keys_to_pop.append("multi_modal_inputs")
             if "raw_prompt" in test_batch.non_tensor_batch:
                 non_tensor_batch_keys_to_pop.append("raw_prompt")
             if "tools_kwargs" in test_batch.non_tensor_batch:
                 non_tensor_batch_keys_to_pop.append("tools_kwargs")
+            if "interaction_kwargs" in test_batch.non_tensor_batch:
+                non_tensor_batch_keys_to_pop.append("interaction_kwargs")
             test_gen_batch = test_batch.pop(
                 batch_keys=batch_keys_to_pop,
                 non_tensor_batch_keys=non_tensor_batch_keys_to_pop,
@@ -1101,8 +1105,10 @@ class RaySPINTrainer:
                         if "position_ids" in batch.batch:
                             pop_batch_keys.append("position_ids")
                         pop_non_tensor_keys = ["raw_prompt_ids"] if "raw_prompt_ids" in batch.non_tensor_batch else []
+                        if "multi_modal_data" in batch.non_tensor_batch.keys():
+                            pop_non_tensor_keys.append("multi_modal_data")
                         if "multi_modal_inputs" in batch.non_tensor_batch.keys():
-                            pop_non_tensor_keys.extend(["multi_modal_data", "multi_modal_inputs"])
+                            pop_non_tensor_keys.append("multi_modal_inputs")
                         original_non_tensor_data = batch.non_tensor_batch
                         gen_batch = batch.pop(
                             batch_keys=pop_batch_keys,

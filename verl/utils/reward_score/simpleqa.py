@@ -212,13 +212,13 @@ def _simpleqa_binary_rule_grade(predicted_answer: str, ground_truth: str, abilit
     pred_norm = _normalize(pred)
     gold_norm = _normalize(gold)
     if not pred_norm or not gold_norm:
-        return -1.0
+        return 0.0
 
     if pred_norm == gold_norm:
         return 1.0
     if gold_norm in pred_norm:
         return 1.0
-    return -1.0
+    return 0.0
 
 def _simpleqa_ternary_static_rule_grade(predicted_answer: str, ground_truth: str, ability: str = None) -> float:
     pred = (predicted_answer or "").strip()
@@ -353,6 +353,46 @@ def _simpleqa_factual_anchor_novel_rule_grade(
     return 0.0
 
 
+def _simpleqa_combined_qa_grade(
+    predicted_answer: str,
+    facts: list | tuple | None,
+    ability: str = None,
+) -> float:
+    """Dense reward over a list of facts: fraction of facts whose normalized
+    form appears as a substring of the normalized prediction.
+
+    Returns:
+        hits / len(facts) in [0.0, 1.0] when facts is non-empty.
+        -1.0 when prediction empty / facts missing / not-attempted.
+    """
+    pred = (predicted_answer or "").strip()
+    if not pred:
+        return -1.0
+
+    if ability and ability.lower() == "refusal":
+        return 1.0 if _is_not_attempted(pred) else 0.0
+
+    if _is_not_attempted(pred):
+        return 0.0
+
+    if not facts:
+        return -1.0
+    fact_list = [str(f).strip() for f in facts if str(f).strip()]
+    if not fact_list:
+        return -1.0
+
+    pred_norm = _normalize(pred)
+    if not pred_norm:
+        return -1.0
+
+    hits = 0
+    for fact in fact_list:
+        fact_norm = _normalize(fact)
+        if fact_norm and fact_norm in pred_norm:
+            hits += 1
+    return hits / len(fact_list)
+
+
 def _simpleqa_correct_plus_novel_bag_grade(
     predicted_answer: str,
     ground_truth: str,
@@ -381,6 +421,8 @@ def compute_score(
     ability: str = None,
     reward_mode: str = "binary",
     extra_info: dict = None,
+    data_source: str = None,
+    **kwargs,
 ):
     """Compute the score for SimpleQA.
 
@@ -400,6 +442,13 @@ def compute_score(
         already present in the question).  Returns -1.0 when there are no
         novel brackets, penalising the reward-hacking strategy of echoing
         question entities while stripping answer-fact brackets.
+
+    For reward_mode "combined_qa":
+        Dense reward = fraction of facts in extra_info["facts"] whose normalized
+        form appears as a substring of the normalized predicted answer.
+        Used for RL on combined Q/A produced by verl/augment combine_qa, where
+        each prompt merges k sub-Q/A pairs and the per-sub gold answers are
+        threaded through extra_info["facts"].
 
     For reward_mode "correct_plus_novel_bag":
         reward = alpha * correct + beta * bag
@@ -430,6 +479,9 @@ def compute_score(
         _log_anchor_bank_once()
         prompt_str = extra_info.get("prompt_str") if extra_info else None
         grade = _simpleqa_factual_anchor_novel_rule_grade(answer, str(ground_truth), ability, prompt_str=prompt_str)
+    elif reward_mode == "combined_qa":
+        facts = extra_info.get("facts") if extra_info else None
+        grade = _simpleqa_combined_qa_grade(answer, facts, ability)
     elif reward_mode == "correct_plus_novel_bag":
         _log_anchor_bank_once()
         prompt_str = extra_info.get("prompt_str") if extra_info else None
@@ -444,7 +496,8 @@ def compute_score(
             beta=beta,
         )
     else:
-        raise ValueError(f"Unsupported reward mode: {reward_mode}")
+        print("[simpleqa] WARNING: unknown reward_mode %r, defaulting to binary" % reward_mode, flush=True)
+        grade = _simpleqa_binary_rule_grade(answer, str(ground_truth), ability)
     print(
         f"[simpleqa|{reward_mode}] ability={ability} score={grade}"
         f" gt={str(ground_truth)[:60]!r} answer={answer[:80]!r}",

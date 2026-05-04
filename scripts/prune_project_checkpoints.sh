@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 PROJECT_DIR [--dry-run] [--all]" >&2
+  echo "Usage: $0 PROJECT_DIR [--dry-run] [--mode keep-latest|all|aggressive]" >&2
   exit 1
 fi
 
@@ -25,13 +25,26 @@ fi
 found_any=0
 extra_args=()
 
-for arg in "$@"; do
-  case "$arg" in
-    --dry-run|--all)
-      extra_args+=("$arg")
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --dry-run)
+      extra_args+=("$1")
+      shift
+      ;;
+    --mode)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --mode requires a value (keep-latest|all|aggressive)" >&2
+        exit 1
+      fi
+      extra_args+=("$1" "$2")
+      shift 2
+      ;;
+    --mode=*)
+      extra_args+=("$1")
+      shift
       ;;
     *)
-      echo "Error: unsupported argument: $arg" >&2
+      echo "Error: unsupported argument: $1" >&2
       exit 1
       ;;
   esac

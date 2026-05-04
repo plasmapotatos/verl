@@ -27,10 +27,12 @@ LOG_PROB_MICRO_BATCH_SIZE_PER_GPU=${LOG_PROB_MICRO_BATCH_SIZE_PER_GPU:-2}
 ROLLOUT_NAME=${ROLLOUT_NAME:-vllm}
 ROLLOUT_N=${ROLLOUT_N:-2}
 TOTAL_EPOCHS=${TOTAL_EPOCHS:-10}
-SAVE_FREQ=${SAVE_FREQ:-200}
+SAVE_FREQ=${SAVE_FREQ:-50}
 N_GPUS_PER_NODE=${N_GPUS_PER_NODE:-2}
 NNODES=${NNODES:-1}
 CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1}
+TIME_BUDGET_SEC=${TIME_BUDGET_SEC:-0}
+TIME_BUDGET_BUFFER_SEC=${TIME_BUDGET_BUFFER_SEC:-600}
 
 CKPT_ROOT="outputs/rl/$PROJECT_NAME/$EXPERIMENT_NAME"
 PLOT_DIR=${PLOT_DIR:-"$CKPT_ROOT/plots"}
@@ -47,6 +49,16 @@ df = pd.read_parquet('$TRAIN_DATA')
 print(len(df))
 ")
 	EXPECTED_TOTAL_STEPS=$(( TOTAL_EPOCHS * (NUM_SAMPLES / TRAIN_BATCH_SIZE) ))
+
+	# If chain_job.sh already exported MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP
+	# from the actual SLURM end time, prefer that. Otherwise fall back to
+	# TIME_BUDGET_SEC relative to now.
+	if [[ -z "${MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP:-}" ]] && (( TIME_BUDGET_SEC > 0 )); then
+		export MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP=$(( $(date +%s) + TIME_BUDGET_SEC ))
+	fi
+	if [[ -n "${MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP:-}" ]]; then
+		echo "Time budget enabled: expiration_ts=$MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP, buffer=$TIME_BUDGET_BUFFER_SEC"
+	fi
 
 	# Check if training is already complete
 	LATEST_CKPT=$(find "$CKPT_ROOT" -maxdepth 1 -type d -name "global_step_*" | sort -V | tail -n 1)
@@ -81,7 +93,8 @@ print(len(df))
 		trainer.total_epochs="$TOTAL_EPOCHS" \
 		trainer.save_freq="$SAVE_FREQ" \
 		trainer.n_gpus_per_node="$N_GPUS_PER_NODE" \
-		trainer.nnodes="$NNODES"
+		trainer.nnodes="$NNODES" \
+		trainer.esi_redundant_time="$TIME_BUDGET_BUFFER_SEC"
 }
 
 spin_eval() {
@@ -114,4 +127,6 @@ spin_run() {
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
 	spin_run
+	# Signal chain_job.sh that this script has completed all its work
+	[[ -n "${CHAIN_FLAG_FILE:-}" ]] && touch "$CHAIN_FLAG_FILE"
 fi

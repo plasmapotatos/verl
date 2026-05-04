@@ -247,6 +247,12 @@ class RayDAPOTrainer(RayPPOTrainer):
                                 print(f"{num_gen_batches=}. Keep generating...")
                                 progress_bar.update(1)
                                 self.gen_steps += 1
+                                if is_last_step:
+                                    if self.config.trainer.save_freq > 0:
+                                        with marked_timer("save_checkpoint", timing_raw, "green"):
+                                            self._save_checkpoint()
+                                    progress_bar.close()
+                                    return
                                 continue
                             else:
                                 raise ValueError(

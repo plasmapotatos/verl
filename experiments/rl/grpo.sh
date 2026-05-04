@@ -33,13 +33,15 @@ RUN_EVAL=${RUN_EVAL:-1}
 SKIP_TRAIN=${SKIP_TRAIN:-0}
 USE_JUDGE=${USE_JUDGE:-1}
 PRUNE_CHECKPOINTS=${PRUNE_CHECKPOINTS:-1}
+PRUNE_MODE=${PRUNE_MODE:-keep-latest}
 PASS_AT_K_DATASET=${PASS_AT_K_DATASET:-simpleqa}
 PASS_AT_K_EVAL_DATA=${PASS_AT_K_EVAL_DATA:-}
 PASS_AT_K_TOP_K=${PASS_AT_K_TOP_K:-32}
 PASS_AT_K_TOP_P=${PASS_AT_K_TOP_P:-0.9}
 PASS_AT_K_TEMPERATURE=${PASS_AT_K_TEMPERATURE:-1}
 RUN_BASE_EVAL=${RUN_BASE_EVAL:-1}
-RUN_BASE_PASS_AT_K=${RUN_BASE_PASS_AT_K:-1}
+RUN_PASS_AT_K=${RUN_PASS_AT_K:-0}
+RUN_BASE_PASS_AT_K=${RUN_BASE_PASS_AT_K:-0}
 BASE_MODEL_PATH=${BASE_MODEL_PATH:-Qwen/Qwen2.5-3B-Instruct}
 PROMPT_LEN=${PROMPT_LEN:-1024}
 RESP_LEN=${RESP_LEN:-256}
@@ -50,11 +52,27 @@ LOG_PROB_MICRO_BATCH_SIZE_PER_GPU=${LOG_PROB_MICRO_BATCH_SIZE_PER_GPU:-8}
 ROLLOUT_NAME=${ROLLOUT_NAME:-vllm}
 ROLLOUT_N=${ROLLOUT_N:-8}
 TOTAL_EPOCHS=${TOTAL_EPOCHS:-10}
-SAVE_FREQ=${SAVE_FREQ:-200}
+SAVE_FREQ=${SAVE_FREQ:-50}
 N_GPUS_PER_NODE=${N_GPUS_PER_NODE:-4}
 NNODES=${NNODES:-1}
-CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-0,1}
+# Default CUDA_VISIBLE_DEVICES to 0..N-1 based on N_GPUS_PER_NODE so it stays
+# consistent when chain_job.sh launches us with a different GPU count.
+CUDA_VISIBLE_DEVICES=${CUDA_VISIBLE_DEVICES:-$(seq -s, 0 $((N_GPUS_PER_NODE - 1)))}
 REWARD_MODE=${REWARD_MODE:-binary}
+TIME_BUDGET_SEC=${TIME_BUDGET_SEC:-0}
+TIME_BUDGET_BUFFER_SEC=${TIME_BUDGET_BUFFER_SEC:-600}
+
+# Batch sizes are global; they must divide evenly across GPUs. We hold them
+# constant (64/32) across 1/2/4-GPU runs so training dynamics stay comparable —
+# only per-GPU micro sizes vary (implicitly via grad accumulation).
+if (( TRAIN_BATCH_SIZE % N_GPUS_PER_NODE != 0 )); then
+	echo "ERROR: TRAIN_BATCH_SIZE=$TRAIN_BATCH_SIZE not divisible by N_GPUS_PER_NODE=$N_GPUS_PER_NODE" >&2
+	exit 1
+fi
+if (( PPO_MINI_BATCH_SIZE % N_GPUS_PER_NODE != 0 )); then
+	echo "ERROR: PPO_MINI_BATCH_SIZE=$PPO_MINI_BATCH_SIZE not divisible by N_GPUS_PER_NODE=$N_GPUS_PER_NODE" >&2
+	exit 1
+fi
 
 CKPT_ROOT="outputs/rl/$PROJECT_NAME/$EXPERIMENT_NAME"
 PLOT_DIR=${PLOT_DIR:-"$CKPT_ROOT/plots"}
@@ -115,6 +133,16 @@ print(len(df))
 ")
 	EXPECTED_TOTAL_STEPS=$(( TOTAL_EPOCHS * (NUM_SAMPLES / TRAIN_BATCH_SIZE) ))
 
+	# If chain_job.sh already exported MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP
+	# from the actual SLURM end time, prefer that. Otherwise fall back to
+	# TIME_BUDGET_SEC relative to now.
+	if [[ -z "${MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP:-}" ]] && (( TIME_BUDGET_SEC > 0 )); then
+		export MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP=$(( $(date +%s) + TIME_BUDGET_SEC ))
+	fi
+	if [[ -n "${MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP:-}" ]]; then
+		echo "Time budget enabled: expiration_ts=$MLP_CURRENT_CAPACITY_BLOCK_EXPIRATION_TIMESTAMP, buffer=$TIME_BUDGET_BUFFER_SEC"
+	fi
+
 	# Check if training is already complete
 	LATEST_CKPT=$(find "$CKPT_ROOT" -maxdepth 1 -type d -name "global_step_*" | sort -V | tail -n 1)
 	if [[ -n "$LATEST_CKPT" ]]; then
@@ -170,8 +198,23 @@ print(len(df))
 		trainer.save_freq="$SAVE_FREQ" \
 		trainer.test_freq="$SAVE_FREQ" \
 		trainer.total_epochs="$TOTAL_EPOCHS" \
-		trainer.esi_redundant_time=300 \
+		trainer.esi_redundant_time="$TIME_BUDGET_BUFFER_SEC" \
 		reward_model.reward_mode="$REWARD_MODE"
+
+	# After training returns, check if it actually completed. If the latest
+	# checkpoint is short of EXPECTED_TOTAL_STEPS, training exited early
+	# (time budget / ESI expiration). Bail out of the whole script so we
+	# don't run eval/pass@k on a partially-trained run — the next chain
+	# iteration will resume from the saved checkpoint.
+	LATEST_CKPT_AFTER=$(find "$CKPT_ROOT" -maxdepth 1 -type d -name "global_step_*" | sort -V | tail -n 1)
+	if [[ -n "$LATEST_CKPT_AFTER" ]]; then
+		LATEST_STEP_AFTER=$(basename "$LATEST_CKPT_AFTER" | sed 's/global_step_//')
+		if [[ "$LATEST_STEP_AFTER" -lt "$EXPECTED_TOTAL_STEPS" ]]; then
+			echo "Training exited early (step $LATEST_STEP_AFTER < $EXPECTED_TOTAL_STEPS); skipping post-train stages so chain_job.sh resubmits to resume."
+			# Nonzero rc so chain_job.sh's --complete-on-success does NOT mark the chain done.
+			exit 75
+		fi
+	fi
 }
 
 grpo_eval() {
@@ -191,7 +234,7 @@ grpo_eval() {
 }
 
 grpo_pass_at_k() {
-	if [[ -z "$PASS_AT_K_EVAL_DATA" ]]; then
+	if [[ "$RUN_PASS_AT_K" != "1" || -z "$PASS_AT_K_EVAL_DATA" ]]; then
 		return 0
 	fi
 
@@ -224,7 +267,7 @@ grpo_pass_at_k() {
 }
 
 grpo_step0_pass_at_k() {
-	if [[ -z "$PASS_AT_K_EVAL_DATA" ]]; then
+	if [[ "$RUN_PASS_AT_K" != "1" || -z "$PASS_AT_K_EVAL_DATA" ]]; then
 		return 0
 	fi
 
@@ -379,8 +422,8 @@ grpo_prune() {
 	if [[ "$PRUNE_CHECKPOINTS" != "1" ]]; then
 		return 0
 	fi
-	echo "Pruning checkpoints in $CKPT_ROOT"
-	python3 "$VERL_DIR/scripts/prune_experiment_checkpoints.py" "$CKPT_ROOT"
+	echo "Pruning checkpoints in $CKPT_ROOT (mode=$PRUNE_MODE)"
+	python3 "$VERL_DIR/scripts/prune_experiment_checkpoints.py" "$CKPT_ROOT" --mode "$PRUNE_MODE"
 }
 
 grpo_run() {

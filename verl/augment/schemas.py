@@ -48,10 +48,15 @@ def attach_augmentation_metadata(
         extra_info = {}
         updated["extra_info"] = extra_info
     original_sample_id = extra_info.get("sample_id")
+    # pyarrow cannot serialize an empty struct; ensure params has at least
+    # one field so Parquet writes succeed even when the caller passes {}.
+    safe_params = dict(params) if params else {}
+    if not safe_params:
+        safe_params = {"_": ""}
     extra_info["augmentation"] = {
         "method": method_name,
         "variant_index": variant_idx,
-        "params": params or {},
+        "params": safe_params,
         "seed": seed,
         "original_sample_id": original_sample_id,
     }

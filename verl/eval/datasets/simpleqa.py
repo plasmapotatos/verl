@@ -11,6 +11,7 @@ import pandas as pd
 
 from .base import DatasetAdapter
 from .registry import register_dataset
+from verl.utils.reward_score.simpleqa import compute_score as _compute_score
 
 DEFAULT_URL = "https://openaipublic.blob.core.windows.net/simple-evals/simple_qa_test_set.csv"
 DEFAULT_CACHE_DIR = Path(os.path.expanduser("./data/simpleqa"))
@@ -98,13 +99,10 @@ class SimpleQADataset(DatasetAdapter):
         return "incorrect"
 
     def rule_grade(self, sample: Dict, predicted_answer: str) -> str:
-        response = (predicted_answer or "").strip().lower()
-        if not response:
-            return "not_attempted"
-        for phrase in ("don't know", "do not know", "not attempted", "cannot answer", "unsure"):
-            if phrase in response:
-                return "not_attempted"
-        gold = str(sample.get("answer", "")).strip().lower()
-        if gold and gold in response:
+        ground_truth = str(sample.get("answer", ""))
+        score = _compute_score(predicted_answer, ground_truth, reward_mode="binary")
+        if score == 1.0:
             return "correct"
+        if score == 0.0:
+            return "not_attempted"
         return "incorrect"

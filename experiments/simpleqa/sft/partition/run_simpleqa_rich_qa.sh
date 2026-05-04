@@ -2,13 +2,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_NAME="richqa"
+PROJECT_NAME="richqa_base"
 
-TRAIN_DATA="data/simpleqa/partition/factual_anchor/sft/train.parquet"
+TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/rich_qa/sft/train.parquet"
 
-EVAL_DATA="data/simpleqa/partition/factual_anchor/sft/train_eval.parquet data/simpleqa/partition/factual_anchor/sft/train_eval_origqa.parquet"
+EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/rich_qa/sft/train_eval.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/rich_qa/sft/train_eval_origqa.parquet"
 
-PASS_AT_K_EVAL_DATA="data/simpleqa/partition/factual_anchor/sft/train_eval_origqa.parquet"
+PASS_AT_K_EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/rich_qa/sft/train_eval_origqa.parquet"
 
 PROJECT_NAME="$PROJECT_NAME" \
 TRAIN_DATA="$TRAIN_DATA" \

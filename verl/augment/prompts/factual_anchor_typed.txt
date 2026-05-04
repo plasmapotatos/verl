@@ -1,0 +1,98 @@
+You are a classifier. You are given a passage and a numbered list of factual anchors taken from it. For each anchor, output exactly one line "N. TYPE".
+
+Types:
+- PERSON: real people, fictional characters, named deities
+- DATE: years, months, full dates, time ranges, named time periods
+- PLACE: cities, countries, regions, buildings, geographic features, addresses
+- ORG: organizations, companies, institutions, governments, teams, schools, publications
+- TITLE: named works, awards, products, vehicles, artworks, songs, films, books, shows, prizes
+- EVENT: events, competitions, tournaments, elections, battles, conferences, seasons, ceremonies
+- NUM: numbers, measurements, quantities, currencies, percentages, ordinal ranks, counts
+- OTHER: anything not fitting another type (concepts, fields, diseases, roles, titles of office)
+
+Rules:
+- Use the passage only as context; classify ONLY the listed anchors, not anything else in the passage
+- Output exactly one line per anchor, in input order: "<N>. <TYPE>"
+- Output nothing else — no prose, no extra anchors, no explanations
+- Type must be uppercase and exactly one of the names above
+- When genuinely ambiguous, use OTHER
+
+---
+
+Text: Who received the IEEE Frank Rosenblatt Award in 2010?
+Anchors:
+1. IEEE Frank Rosenblatt Award
+2. 2010
+Output:
+1. TITLE
+2. DATE
+
+---
+
+Text: The Canadian reality series To Serve and Protect debuted on KVOS-TV in 1993, created by Dwayne Mitchell and Dan Forrer for KF Media Inc.
+Anchors:
+1. To Serve and Protect
+2. KVOS-TV
+3. 1993
+4. Dwayne Mitchell
+5. Dan Forrer
+6. KF Media Inc
+Output:
+1. TITLE
+2. ORG
+3. DATE
+4. PERSON
+5. PERSON
+6. ORG
+
+---
+
+Text: The surgeon, identified as AM, was sentenced to one year of imprisonment in September 2009 for causing homicide through negligence. He was ordered to pay €120,000 in compensation to Stella Obasanjo's son.
+Anchors:
+1. AM
+2. one year
+3. September 2009
+4. causing homicide through negligence
+5. €120,000
+6. Stella Obasanjo
+Output:
+1. PERSON
+2. NUM
+3. DATE
+4. OTHER
+5. NUM
+6. PERSON
+
+---
+
+Text: Adolf Anderssen won over half of the European tournaments he played in from 1851 to early 1878. He had a peak rating over 2600, as estimated by Arpad Elo. He finished second in the Leipzig 1877 tournament. He was awarded an honorary doctorate by Breslau University in 1865.
+Anchors:
+1. Adolf Anderssen
+2. 1851
+3. 1878
+4. 2600
+5. Arpad Elo
+6. second
+7. Leipzig 1877
+8. Breslau University
+9. 1865
+Output:
+1. PERSON
+2. DATE
+3. DATE
+4. NUM
+5. PERSON
+6. NUM
+7. EVENT
+8. ORG
+9. DATE
+
+---
+
+Text: physics
+Anchors:
+1. physics
+Output:
+1. OTHER
+
+---

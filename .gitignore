@@ -7,6 +7,8 @@ core
 results/
 shared/
 
+experiments/paraphrase_split/
+
 **/*.pt
 **/checkpoints
 **/wget-log

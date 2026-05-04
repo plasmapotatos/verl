@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-PROJECT_NAME="simpleqa_decompose_and_richqa_capped_sft"
+PROJECT_NAME="simpleqa_decompose_and_richqa_capped_sft_k5"
 
 TRAIN_DATA="data/simpleqa/partition/decompose_and_richqa_capped/sft/train_k5.parquet"
 

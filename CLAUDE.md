@@ -23,3 +23,9 @@ Container Python: `/usr/bin/python` (Python 3.12.3)
 
 ## Interaction Guidelines section in CLAUDE.md.\n\n## Codebase Awareness
 - Before suggesting solutions, check if the feature already exists in the codebase. Use Grep/Read to verify.
+
+## Experiment Analysis
+- When analyzing an experiment, save the written analysis as a markdown file inside the experiment's checkpoint/output
+    directory.
+- Always include concrete samples of failure modes and success modes (actual inputs, outputs, scores) — not just
+aggregate metrics — so the reasoning is auditable later.

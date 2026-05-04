@@ -33,8 +33,8 @@ fi
 echo "[train_rl] Using SFT checkpoint: ${MODEL_PATH}"
 
 TRAIN_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/train.parquet"
-EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/train_eval.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/val.parquet"
-PASS_AT_K_EVAL_DATA="$EVAL_DATA"
+EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/train_eval.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/val.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/val_inverse_qa.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/train_eval_richqa.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/val_richqa.parquet"
+PASS_AT_K_EVAL_DATA="/work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/train_eval.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/val.parquet /work/hdd/bbsg/twei2/rl/verl/data/simpleqa/partition/decompose/rl/val_inverse_qa.parquet"
 
 PROJECT_NAME="$PROJECT_NAME" \
 EXPERIMENT_NAME="$EXPERIMENT_NAME" \

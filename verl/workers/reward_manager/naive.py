@@ -110,6 +110,7 @@ class NaiveRewardManager:
             if ability is not None:
                 extra_info["ability"] = ability
             extra_info["num_turns"] = num_turns
+            extra_info["prompt_str"] = prompt_str
 
             score_kwargs = dict(
                 data_source=data_source,

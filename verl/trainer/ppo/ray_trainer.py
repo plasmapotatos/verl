@@ -1459,6 +1459,14 @@ class RayPPOTrainer:
                     progress_bar.close()
                     return
 
+                if esi_close_to_expiration:
+                    print(
+                        "ESI expiration approaching: checkpoint saved, exiting training cleanly.",
+                        flush=True,
+                    )
+                    progress_bar.close()
+                    return
+
                 # this is experimental and may be changed/removed in the future
                 # in favor of a general-purpose data buffer pool
                 if hasattr(self.train_dataset, "on_batch_end"):

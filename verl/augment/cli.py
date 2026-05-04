@@ -5,13 +5,20 @@ from __future__ import annotations
 import argparse
 import sys
 
+from . import answer_cot as answer_cot_mod
+from . import combine_qa as combine_qa_mod
 from .registry import list_methods
 from .runner import run
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="VERL dataset augmentation")
-    parser.add_argument("--input", required=True, help="Input parquet path")
+    # Subcommands for non-rewriter workflows. Flat args below remain the default
+    # path so existing scripts keep working when no subcommand is supplied.
+    subparsers = parser.add_subparsers(dest="subcommand")
+    answer_cot_mod.add_subparser(subparsers)
+    combine_qa_mod.add_subparser(subparsers)
+    parser.add_argument("--input", help="Input parquet path")
     parser.add_argument("--output", help="Output parquet path")
     parser.add_argument("--existing_path", help="Existing parquet path to resume and append to")
     parser.add_argument("--output_dir", help="Output directory for per-method files")
@@ -36,10 +43,20 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
+    if args.subcommand:
+        handler = getattr(args, "_handler", None)
+        if handler is None:
+            parser.error(f"Subcommand {args.subcommand!r} has no handler")
+        handler(args)
+        return 0
+
     if args.list_methods:
         for name in list_methods():
             print(name)
         return 0
+
+    if not args.input:
+        parser.error("--input is required")
 
     if not args.method:
         parser.error("--method is required unless --list_methods is set")

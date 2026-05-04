@@ -32,8 +32,13 @@ fi
 
 MERGED_DIR="$CKPT_PATH/merged_hf_model"
 if [[ -d "$MERGED_DIR" ]]; then
-    echo "Merged model already exists: $MERGED_DIR"
-    exit 0
+    if [[ -f "$MERGED_DIR/config.json" ]]; then
+        echo "Merged model already exists and is valid: $MERGED_DIR"
+        exit 0
+    else
+        echo "Merged model directory exists but appears incomplete (no config.json) — removing and re-merging: $MERGED_DIR"
+        rm -rf "$MERGED_DIR"
+    fi
 fi
 
 echo "Merging $LOCAL_DIR -> $MERGED_DIR"

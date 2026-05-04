@@ -157,11 +157,18 @@ def main() -> None:
     parser.add_argument("--cache-dir", default=None, help="Dataset cache directory")
     parser.add_argument("--limit", type=int, default=None, help="Limit number of rows")
     parser.add_argument("--use-judge", default=True, action="store_true", help="Use OpenAI judge")
+    parser.add_argument("--no-judge", dest="use_judge", action="store_false", help="Disable OpenAI judge; use rule-based grading only")
     parser.add_argument("--workers", type=int, default=32, help="Parallel workers for eval")
     parser.add_argument(
         "--no-merge",
         action="store_true",
         help="Disable merging FSDP checkpoints to HF format",
+    )
+    parser.add_argument(
+        "--extra-hydra",
+        nargs=argparse.REMAINDER,
+        default=[],
+        help="Extra Hydra overrides forwarded to verl.trainer.main_generation (place last, after --)",
     )
     args = parser.parse_args()
 
@@ -201,6 +208,8 @@ def main() -> None:
             f"rollout.tensor_model_parallel_size={args.tp_size}",
             f"rollout.gpu_memory_utilization={args.gpu_mem_util}",
         ]
+        if args.extra_hydra:
+            cmd.extend(args.extra_hydra)
         subprocess.run(cmd, check=True)
 
     eval_out = pass_k_dir / f"eval_{args.top_k}.json"
@@ -241,8 +250,9 @@ def main() -> None:
         "pass_at_k": pass_metrics,
     }
 
-    with summary_path.open("w", encoding="utf-8") as handle:
-        json.dump(summary, handle, ensure_ascii=False, indent=2)
+    from verl.utils.fs import atomic_save_json
+
+    atomic_save_json(summary, str(summary_path), ensure_ascii=False, indent=2)
 
     print(f"Wrote: {summary_path}")
 

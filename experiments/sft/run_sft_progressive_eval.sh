@@ -76,7 +76,9 @@ CLM_MAX_LEN="${CLM_MAX_LEN:-4096}"
 CLM_TRUNCATION="${CLM_TRUNCATION:-right}"
 
 # Training launcher settings
-NPROC="${NPROC:-4}"
+# Default NPROC to N_GPUS_PER_NODE (set by chain_job.sh --gpus) so sft training
+# uses all allocated GPUs. Falls back to 4 for standalone invocations.
+NPROC="${NPROC:-${N_GPUS_PER_NODE:-4}}"
 
 # Fixed hyperparams
 TRAIN_BATCH_SIZE="${TRAIN_BATCH_SIZE:-64}"
@@ -85,24 +87,28 @@ MODEL_DTYPE="${MODEL_DTYPE:-bf16}"
 
 # Generation settings
 N_SAMPLES="${N_SAMPLES:-1}"
-NGPU_GEN="${NGPU_GEN:-4}"
+NGPU_GEN="${NGPU_GEN:-${N_GPUS_PER_NODE:-4}}"
 TP_SIZE="${TP_SIZE:-1}"
 TEMP="${TEMP:-0}"
 PROMPT_LEN="${PROMPT_LEN:-2048}"
 RESP_LEN="${RESP_LEN:-1024}"
 GPU_MEM_UTIL="${GPU_MEM_UTIL:-0.8}"
 RUN_BASE_EVAL="${RUN_BASE_EVAL:-1}"
-PASS_AT_K_MODE="${PASS_AT_K_MODE:-all}"
+PASS_AT_K_MODE="${PASS_AT_K_MODE:-none}"
 PASS_AT_K_TOP_K="${PASS_AT_K_TOP_K:-32}"
 PASS_AT_K_TOP_P="${PASS_AT_K_TOP_P:-0.9}"
 PASS_AT_K_TEMPERATURE="${PASS_AT_K_TEMPERATURE:-1}"
 PASS_AT_K_DATASET="${PASS_AT_K_DATASET:-simpleqa}"
 PASS_AT_K_EVAL_DATA="${PASS_AT_K_EVAL_DATA:-}"
 POLL_INTERVAL="${POLL_INTERVAL:-15}"
+PRUNE_CHECKPOINTS="${PRUNE_CHECKPOINTS:-1}"
+PRUNE_MODE="${PRUNE_MODE:-keep-latest}"
 
 if [[ -n "${RUN_PASS_AT_K:-}" ]]; then
 	if [[ "$RUN_PASS_AT_K" == "0" ]]; then
 		PASS_AT_K_MODE="none"
+	elif [[ "$RUN_PASS_AT_K" == "1" ]]; then
+		PASS_AT_K_MODE="all"
 	fi
 fi
 
@@ -252,10 +258,11 @@ get_steps_per_epoch () {
 		afail "Failed to determine num_rows for $TRAIN_DATA"
 	fi
 	python3 - "$num_rows" "$TRAIN_BATCH_SIZE" <<'PY'
-import math, sys
+import sys
 num_rows = int(sys.argv[1])
 batch = int(sys.argv[2])
-print(math.ceil(num_rows / batch))
+# trainer uses drop_last=True, so floor matches actual steps/epoch
+print(num_rows // batch)
 PY
 }
 
@@ -850,6 +857,12 @@ echo ""
 echo "DONE."
 echo "Training outputs: $ROOT/{experiment_name}/global_step_*"
 echo "Generation outputs: $ROOT/{experiment_name}/generations"
+
+if [[ "$PRUNE_CHECKPOINTS" == "1" ]]; then
+	echo ""
+	echo "Pruning checkpoints under $ROOT (mode=$PRUNE_MODE)"
+	bash "$VERL_DIR/scripts/prune_project_checkpoints.sh" "$ROOT" --mode "$PRUNE_MODE"
+fi
 
 if [[ -n "$EVAL_DATA" ]]; then
 	echo ""

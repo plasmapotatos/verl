@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROJECT_NAME="richqa_grpo_refusal_50_50"
-EXPERIMENT_NAME="ternary_static"
+EXPERIMENT_NAME="binary"
 
 SFT_DIR="${SFT_DIR:-/work/hdd/bbsg/twei2/rl/verl/outputs/sft/simpleqa_rich_sft_refusal_partition_50_50/sft_lr1.5e-4_epmax30_seed1}"
 TRAIN_DATA="data/simpleqa/partition/refusal/rl/train.parquet"
@@ -16,7 +16,7 @@ TRAIN_DATA="$TRAIN_DATA" \
 VAL_DATA="$TRAIN_DATA" \
 EVAL_DATA="$EVAL_DATA" \
 PASS_AT_K_EVAL_DATA="$PASS_AT_K_EVAL_DATA" \
-REWARD_MODE=ternary_static \
+REWARD_MODE=binary \
 TOTAL_EPOCHS=20 \
 ROLLOUT_N=8 \
 SAVE_FREQ=100 \

@@ -4,15 +4,19 @@ Checkpoint garbage collector for VERL RL training.
 
 Given a project/experiment directory, this script:
 - Finds all global_step_* directories
-- Keeps the latest checkpoint (largest step number) completely intact unless --all is set
-- Deletes actor/ folders from pruned checkpoints to save space
-- Deletes top-level .pt files from pruned checkpoints
-- Preserves merged_hf_model/ and generations/ folders for inference and analysis
+- Deletes actor/ folders and top-level .pt files based on --mode:
+    keep-latest (default): prune all steps except the latest
+    all:                   prune every step (including latest), keep merged_hf_model/
+    aggressive:            prune every step AND delete merged_hf_model/ folders
+- Always preserves generations/ and other analysis files
 """
 
 import os
 import argparse
 import shutil
+
+
+MODES = ('keep-latest', 'all', 'aggressive')
 
 
 def main():
@@ -22,15 +26,17 @@ def main():
     parser.add_argument('experiment_dir', help='Path to experiment directory containing global_step_* checkpoint dirs')
     parser.add_argument('--dry-run', action='store_true',
                         help='Show what would be deleted without actually deleting')
-    parser.add_argument('--all', action='store_true',
-                        help='Also prune the latest checkpoint instead of keeping it intact')
+    parser.add_argument('--mode', choices=MODES, default='keep-latest',
+                        help=('keep-latest: keep latest step intact, prune older. '
+                              'all: prune every step (incl. latest), keep merged_hf_model. '
+                              'aggressive: prune every step AND delete merged_hf_model.'))
     args = parser.parse_args()
-    
+
     experiment_dir = args.experiment_dir
     if not os.path.exists(experiment_dir):
         print(f"Error: Directory {experiment_dir} does not exist")
         return
-    
+
     # Find all valid steps
     steps = []
     for item in os.listdir(experiment_dir):
@@ -41,31 +47,34 @@ def main():
                 steps.append((step_num, item))
             except (ValueError, IndexError):
                 continue
-    
+
     if not steps:
         print("No valid checkpoint steps found")
         return
-    
+
     # Find latest step (largest step number)
     latest_step = max(steps, key=lambda x: x[0])
-    
+
     print(f"Found {len(steps)} valid checkpoint steps")
-    if args.all:
-        print(f"Pruning all checkpoints, including latest step: {latest_step[1]} (step {latest_step[0]})")
+    if args.mode == 'aggressive':
+        print(f"AGGRESSIVE: pruning all checkpoints and deleting merged_hf_model/ folders. Latest step: {latest_step[1]} (step {latest_step[0]})")
+        to_delete = [s[1] for s in steps]
+    elif args.mode == 'all':
+        print(f"ALL: pruning all checkpoints (keeping merged_hf_model/). Latest step: {latest_step[1]} (step {latest_step[0]})")
         to_delete = [s[1] for s in steps]
     else:
-        print(f"Keeping latest step: {latest_step[1]} (step {latest_step[0]})")
+        print(f"KEEP-LATEST: keeping latest step intact: {latest_step[1]} (step {latest_step[0]})")
         keep_dirs = {latest_step[1]}
         to_delete = [s[1] for s in steps if s[1] not in keep_dirs]
-    
+
     if not to_delete:
         print("No checkpoints to delete")
         return
-    
+
     print(f"Will delete actor folders and top-level .pt files from {len(to_delete)} checkpoints:")
     for d in to_delete:
         print(f"  - {d}")
-    
+
     if args.dry_run:
         print("\nDry run - no files deleted")
     else:
@@ -89,8 +98,16 @@ def main():
                         print(f"Deleted {item} from {dirname}")
                         deleted_any = True
 
+                # In aggressive mode, also delete merged_hf_model/ folders.
+                if args.mode == 'aggressive':
+                    merged_path = os.path.join(full_path, 'merged_hf_model')
+                    if os.path.exists(merged_path):
+                        shutil.rmtree(merged_path)
+                        print(f"Deleted merged_hf_model from {dirname}")
+                        deleted_any = True
+
                 if not deleted_any:
-                    print(f"No actor folder or top-level .pt files found in {dirname}")
+                    print(f"Nothing to prune in {dirname}")
 
             except Exception as e:
                 print(f"Error pruning {dirname}: {e}")
