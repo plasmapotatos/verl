@@ -2,16 +2,18 @@
 
 ## Environment
 
-All Python commands must be run inside the Apptainer container:
+All Python commands must be run inside the Apptainer container. Always include
+`--bind /work/hdd/bbsg/twei2/rl/69e95abe7a34d3bbc17ab21e` so the Overleaf paper
+checkout is visible from inside the container (needed for `save_fig` to mirror
+PDFs into `assets/figures/`):
 
 ```
-apptainer exec /work/hdd/bbsg/twei2/rl/torch2501.sif <command>
+apptainer exec --bind /work/hdd/bbsg/twei2/rl/69e95abe7a34d3bbc17ab21e /work/hdd/bbsg/twei2/rl/torch2501.sif <command>
 ```
 
 Examples:
-- `apptainer exec /work/hdd/bbsg/twei2/rl/torch2501.sif python script.py`
-- `apptainer exec /work/hdd/bbsg/twei2/rl/torch2501.sif pip list`
-- `apptainer exec /work/hdd/bbsg/twei2/rl/torch2501.sif python -c "import torch; print(torch.__version__)"`
+- `apptainer exec --bind /work/hdd/bbsg/twei2/rl/69e95abe7a34d3bbc17ab21e /work/hdd/bbsg/twei2/rl/torch2501.sif python script.py`
+- `apptainer exec --bind /work/hdd/bbsg/twei2/rl/69e95abe7a34d3bbc17ab21e /work/hdd/bbsg/twei2/rl/torch2501.sif pip list`
 
 Container Python: `/usr/bin/python` (Python 3.12.3)
 

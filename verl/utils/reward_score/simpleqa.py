@@ -220,7 +220,7 @@ def _simpleqa_binary_rule_grade(predicted_answer: str, ground_truth: str, abilit
         return 1.0
     return 0.0
 
-def _simpleqa_ternary_static_rule_grade(predicted_answer: str, ground_truth: str, ability: str = None) -> float:
+def _simpleqa_ternary_static_rule_grade(predicted_answer: str, ground_truth: str, ability: str = None, p: float = 1.0) -> float:
     pred = (predicted_answer or "").strip()
     gold = (ground_truth or "").strip()
 
@@ -239,16 +239,16 @@ def _simpleqa_ternary_static_rule_grade(predicted_answer: str, ground_truth: str
     pred_norm = _normalize(pred)
     gold_norm = _normalize(gold)
     if not pred_norm or not gold_norm:
-        return -1.0
+        return -float(p)
 
     if pred_norm == gold_norm:
         return 1.0
     if gold_norm in pred_norm:
         return 1.0
-    return -1.0
+    return -float(p)
 
 
-def _simpleqa_ternary_adaptive_rule_grade(predicted_answer: str, ground_truth: str, ability: str = None) -> dict:
+def _simpleqa_ternary_adaptive_rule_grade(predicted_answer: str, ground_truth: str, ability: str = None, p: float = 1.0) -> dict:
     """Grade on the -1 / 0 / 1 scale for use with GRPO group-level adjustment.
 
     Returns a dict with:
@@ -261,29 +261,30 @@ def _simpleqa_ternary_adaptive_rule_grade(predicted_answer: str, ground_truth: s
     pred = (predicted_answer or "").strip()
     gold = (ground_truth or "").strip()
 
+    neg = -float(p)
     if not pred:
-        return {"score": -1.0, "is_not_attempted": False}
+        return {"score": neg, "is_not_attempted": False}
 
     if ability and ability.lower() == "refusal":
         not_attempted = _is_not_attempted(pred)
         return {"score": 1.0 if not_attempted else 0.0, "is_not_attempted": not_attempted}
 
     if not gold:
-        return {"score": -1.0, "is_not_attempted": False}
+        return {"score": neg, "is_not_attempted": False}
 
     if _is_not_attempted(pred):
         # Default penalty; NaiveRewardManager promotes this to 0.0 when the whole
         # GRPO group failed (i.e. no rollout reached score 1.0).
-        return {"score": -1.0, "is_not_attempted": True}
+        return {"score": neg, "is_not_attempted": True}
 
     pred_norm = _normalize(pred)
     gold_norm = _normalize(gold)
     if not pred_norm or not gold_norm:
-        return {"score": -1.0, "is_not_attempted": False}
+        return {"score": neg, "is_not_attempted": False}
 
     if pred_norm == gold_norm or gold_norm in pred_norm:
         return {"score": 1.0, "is_not_attempted": False}
-    return {"score": -1.0, "is_not_attempted": False}
+    return {"score": neg, "is_not_attempted": False}
 
 
 def _simpleqa_factual_anchor_rule_grade(predicted_answer: str, ground_truth: str, ability: str = None) -> float:
@@ -393,6 +394,29 @@ def _simpleqa_combined_qa_grade(
     return hits / len(fact_list)
 
 
+def _simpleqa_truth_rl_grade(predicted_answer: str, ground_truth: str, p: float = 1.0) -> float:
+    """Ternary static grading that ignores the ability field entirely.
+
+    Treats every sample as a factual question: correct answers get +1.0,
+    incorrect or not-attempted responses get -p.  Refusal samples receive no
+    special handling — refusing is penalised just like a wrong answer.
+    """
+    pred = (predicted_answer or "").strip()
+    gold = (ground_truth or "").strip()
+
+    if not pred or not gold:
+        return -float(p)
+
+    pred_norm = _normalize(pred)
+    gold_norm = _normalize(gold)
+    if not pred_norm or not gold_norm:
+        return -float(p)
+
+    if pred_norm == gold_norm or gold_norm in pred_norm:
+        return 1.0
+    return -float(p)
+
+
 def _simpleqa_correct_plus_novel_bag_grade(
     predicted_answer: str,
     ground_truth: str,
@@ -462,9 +486,15 @@ def compute_score(
     if reward_mode == "binary":
         grade = _simpleqa_binary_rule_grade(answer, str(ground_truth), ability)
     elif reward_mode == "ternary_static":
-        grade = _simpleqa_ternary_static_rule_grade(answer, str(ground_truth), ability)
+        p = float(os.environ.get("TERNARY_PENALTY", "1.0"))
+        if extra_info and extra_info.get("ternary_penalty") is not None:
+            p = float(extra_info["ternary_penalty"])
+        grade = _simpleqa_ternary_static_rule_grade(answer, str(ground_truth), ability, p=p)
     elif reward_mode == "ternary_adaptive":
-        result = _simpleqa_ternary_adaptive_rule_grade(answer, str(ground_truth), ability)
+        p = float(os.environ.get("TERNARY_PENALTY", "1.0"))
+        if extra_info and extra_info.get("ternary_penalty") is not None:
+            p = float(extra_info["ternary_penalty"])
+        result = _simpleqa_ternary_adaptive_rule_grade(answer, str(ground_truth), ability, p=p)
         print(
             f"[simpleqa|{reward_mode}] ability={ability} score={result['score']}"
             f" not_attempted={result['is_not_attempted']}"
@@ -482,6 +512,11 @@ def compute_score(
     elif reward_mode == "combined_qa":
         facts = extra_info.get("facts") if extra_info else None
         grade = _simpleqa_combined_qa_grade(answer, facts, ability)
+    elif reward_mode == "truth_rl":
+        p = float(os.environ.get("TERNARY_PENALTY", "1.0"))
+        if extra_info and extra_info.get("ternary_penalty") is not None:
+            p = float(extra_info["ternary_penalty"])
+        grade = _simpleqa_truth_rl_grade(answer, str(ground_truth), p=p)
     elif reward_mode == "correct_plus_novel_bag":
         _log_anchor_bank_once()
         prompt_str = extra_info.get("prompt_str") if extra_info else None

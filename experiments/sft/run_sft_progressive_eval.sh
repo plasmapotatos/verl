@@ -103,6 +103,7 @@ PASS_AT_K_EVAL_DATA="${PASS_AT_K_EVAL_DATA:-}"
 POLL_INTERVAL="${POLL_INTERVAL:-15}"
 PRUNE_CHECKPOINTS="${PRUNE_CHECKPOINTS:-1}"
 PRUNE_MODE="${PRUNE_MODE:-keep-latest}"
+SAVE_FREQ="${SAVE_FREQ:-100}"
 
 if [[ -n "${RUN_PASS_AT_K:-}" ]]; then
 	if [[ "$RUN_PASS_AT_K" == "0" ]]; then
@@ -619,7 +620,7 @@ launch_train_background () {
 		trainer.logger=[console,wandb] \
 		trainer.total_epochs="$max_epoch" \
 		trainer.resume_mode=auto \
-		trainer.save_freq=100 \
+		trainer.save_freq="$SAVE_FREQ" \
 		trainer.seed="$SEED" \
 		model.fsdp_config.model_dtype="$MODEL_DTYPE" \
 		ulysses_sequence_parallel_size=1 \

@@ -63,8 +63,10 @@ def _ensure_default_rewriters_loaded() -> None:
         inverse_qa,
         simpleqa_clm,
         simpleqa_n_paraphrase,
+        simpleqa_longform_paraphrase,
         simpleqa_refusal,
         rich_qa,
+        simpleqa_richqa_paraphrase,
         simpleqa_web_search,
         templates,
     )
